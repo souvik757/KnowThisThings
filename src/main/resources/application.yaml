@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: KnowThisThings
+  mongodb:
+    additional-hosts:
+    - localhost:27017
+    database: knowthisthings
