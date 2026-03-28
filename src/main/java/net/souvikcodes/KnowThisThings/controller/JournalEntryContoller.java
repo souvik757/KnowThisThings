@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import net.souvikcodes.KnowThisThings.dto.JournalEntryAdminDto;
 import net.souvikcodes.KnowThisThings.dto.JournalEntryDto;
 import net.souvikcodes.KnowThisThings.service.IJournalEntryService;
 
@@ -52,5 +53,13 @@ public class JournalEntryContoller {
     public ResponseEntity<Void> deleteJournalEntry(@PathVariable String id) {
         journalEntryService.deleteJournalEntry(id);
         return ResponseEntity.noContent().build();
+    }
+
+
+    // To see Journal with Id , for admin only
+    @GetMapping("/admin")
+    public ResponseEntity<List<JournalEntryAdminDto>> getJournalEntryByIdForAdmin() {
+        List<JournalEntryAdminDto> journalEntries = journalEntryService.getJournalEntryByIdForAdmin();
+        return ResponseEntity.ok(journalEntries);
     }
 }

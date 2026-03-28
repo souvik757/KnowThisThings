@@ -6,6 +6,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import net.souvikcodes.KnowThisThings.dto.JournalEntryAdminDto;
 import net.souvikcodes.KnowThisThings.dto.JournalEntryDto;
 import net.souvikcodes.KnowThisThings.entity.JournalEntry;
 import net.souvikcodes.KnowThisThings.exception.customexception.JournalEntryException;
@@ -58,5 +59,17 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
             journalEntryRepository.deleteById(id);
         }
         throw new JournalEntryException("Journal entry not found with id: " + id);
+    }
+
+    // For admin only
+    @Override
+    public List<JournalEntryAdminDto> getJournalEntryByIdForAdmin() {
+        List<JournalEntry> journalEntries = journalEntryRepository.findAll();
+        if (journalEntries.isEmpty()) {
+            throw new ResourceNotFoundException("No journal entries found");
+        }
+        return journalEntries.stream()
+                .map(journals -> modelMapper.map(journals, JournalEntryAdminDto.class))
+                .toList();
     }
 }
