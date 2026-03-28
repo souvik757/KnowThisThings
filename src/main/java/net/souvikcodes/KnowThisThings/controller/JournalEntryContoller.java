@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.souvikcodes.KnowThisThings.dto.JournalEntryDto;
 import net.souvikcodes.KnowThisThings.service.IJournalEntryService;
@@ -36,13 +37,13 @@ public class JournalEntryContoller {
     }
 
     @PostMapping
-    public ResponseEntity<JournalEntryDto> createJournalEntry(@RequestBody JournalEntryDto journalEntryDto) {
+    public ResponseEntity<JournalEntryDto> createJournalEntry(@Valid @RequestBody JournalEntryDto journalEntryDto) {
         JournalEntryDto createdJournalEntry = journalEntryService.createJournalEntry(journalEntryDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdJournalEntry);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<JournalEntryDto> updateJournalEntry(@PathVariable String id, @RequestBody JournalEntryDto journalEntryDto) {
+    public ResponseEntity<JournalEntryDto> updateJournalEntry(@PathVariable String id, @Valid @RequestBody JournalEntryDto journalEntryDto) {
         JournalEntryDto updatedJournalEntry = journalEntryService.updateJournalEntry(id, journalEntryDto);
         return ResponseEntity.ok(updatedJournalEntry);
     }

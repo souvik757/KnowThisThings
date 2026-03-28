@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import net.souvikcodes.KnowThisThings.dto.JournalEntryDto;
 import net.souvikcodes.KnowThisThings.entity.JournalEntry;
+import net.souvikcodes.KnowThisThings.exception.customexception.JournalEntryException;
+import net.souvikcodes.KnowThisThings.exception.customexception.ResourceNotFoundException;
 import net.souvikcodes.KnowThisThings.repository.IJournalEntryRepository;
 
 @Service
@@ -44,7 +46,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     @Override
     public JournalEntryDto updateJournalEntry(String id, JournalEntryDto journalEntryDto) {
         JournalEntry existingJournalEntry = journalEntryRepository.findById(id)
-                                            .orElseThrow(() -> new RuntimeException("Journal entry not found with id: " + id));
+                                            .orElseThrow(() -> new ResourceNotFoundException("Journal entry not found with id: " + id));
         modelMapper.map(journalEntryDto, existingJournalEntry);
         JournalEntry updatedJournalEntry = journalEntryRepository.save(existingJournalEntry);
         return modelMapper.map(updatedJournalEntry, JournalEntryDto.class);
@@ -55,6 +57,6 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
         if (journalEntryRepository.existsById(id)) {
             journalEntryRepository.deleteById(id);
         }
-        throw new RuntimeException("Journal entry not found with id: " + id);
+        throw new JournalEntryException("Journal entry not found with id: " + id);
     }
 }
