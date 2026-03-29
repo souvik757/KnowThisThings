@@ -1,5 +1,7 @@
 package net.souvikcodes.KnowThisThings.dto;
 
+import java.time.LocalDateTime;
+
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,4 +14,5 @@ public class JournalEntryAdminDto {
     private String title ;
     @NotBlank(message = "Content cannot be blank")
     private String content;
+    private LocalDateTime createdAt;
 }

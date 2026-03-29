@@ -5,3 +5,12 @@ spring:
     additional-hosts:
     - localhost:27017
     database: knowthisthings
+# logging configuration to show the queries being executed by MongoTemplate
+logging:
+    level:
+        org:
+          springframework:
+            data:
+              mongodb:
+                  core:
+                    MongoTemplate: DEBUG
