@@ -1,7 +1,8 @@
-package net.souvikcodes.KnowThisThings.service;
+package net.souvikcodes.KnowThisThings.service.Implementation;
 
 import java.util.List;
 
+import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -9,9 +10,12 @@ import lombok.RequiredArgsConstructor;
 import net.souvikcodes.KnowThisThings.dto.JournalEntryAdminDto;
 import net.souvikcodes.KnowThisThings.dto.JournalEntryDto;
 import net.souvikcodes.KnowThisThings.entity.JournalEntry;
+import net.souvikcodes.KnowThisThings.entity.Users;
 import net.souvikcodes.KnowThisThings.exception.customexception.JournalEntryException;
 import net.souvikcodes.KnowThisThings.exception.customexception.ResourceNotFoundException;
 import net.souvikcodes.KnowThisThings.repository.IJournalEntryRepository;
+import net.souvikcodes.KnowThisThings.service.IJournalEntryService;
+import net.souvikcodes.KnowThisThings.service.IUserService;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +23,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
 
     private final IJournalEntryRepository journalEntryRepository;
     private final ModelMapper modelMapper;
+    private final IUserService userService;
 
     @Override
     public JournalEntryDto createJournalEntry(JournalEntryDto journalEntryDto) {
@@ -70,6 +75,47 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
         }
         return journalEntries.stream()
                 .map(journals -> modelMapper.map(journals, JournalEntryAdminDto.class))
+                .toList();
+    }
+
+    /**
+     * Verify if a user exists by username
+     */
+    public Users verifyUserByUsername(String username) {
+        return userService.findByUserName(username);
+    }
+
+    /**
+     * Verify if a user exists by ID
+     */
+    public Users verifyUserById(ObjectId userId) {
+        return userService.findById(userId).orElseThrow(
+            () -> new ResourceNotFoundException("User not found with id: " + userId)
+        );
+    }
+
+    /**
+     * Add journal entry to user's journal list
+     */
+    public void associateJournalWithUser(JournalEntry journalEntry, Users user) {
+        if (user.getJournalEntries() == null) {
+            user.setJournalEntries(new java.util.ArrayList<>());
+        }
+        user.getJournalEntries().add(journalEntry);
+        userService.saveUser(user);
+    }
+
+    /**
+     * Get all journals for a specific user
+     */
+    public List<JournalEntryDto> getJournalsByUsername(String username) {
+        Users user = verifyUserByUsername(username);
+        List<JournalEntry> journalEntries = user.getJournalEntries();
+        if (journalEntries == null || journalEntries.isEmpty()) {
+            throw new ResourceNotFoundException("No journals found for user: " + username);
+        }
+        return journalEntries.stream()
+                .map(entry -> modelMapper.map(entry, JournalEntryDto.class))
                 .toList();
     }
 }

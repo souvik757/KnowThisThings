@@ -1,6 +1,7 @@
 package net.souvikcodes.KnowThisThings.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -17,6 +18,8 @@ public class JournalEntry {
     private String id;
     private String title;
     private String content;
+    private List<String> tags;
+    private Integer viewCount;
     @CreatedDate
     private LocalDateTime createdAt;
 }

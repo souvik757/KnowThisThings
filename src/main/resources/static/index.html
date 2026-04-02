@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>KnowThisThings — Journal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Lato:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+  /* ── Reset & base ─────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0e0e0e;
+    --surface:   #161616;
+    --border:    #2a2a2a;
+    --border-hi: #3f3f3f;
+    --ink:       #e8e4dc;
+    --ink-muted: #7a7570;
+    --ink-faint: #3a3835;
+    --accent:    #c8a96e;
+    --accent-dim:#6b5832;
+    --red:       #c0392b;
+    --green:     #2ecc71;
+    --font-head: 'DM Serif Display', Georgia, serif;
+    --font-body: 'Lato', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius:    6px;
+    --chat-w:    380px;
+  }
+
+  html { font-size: 15px; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-weight: 300;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Grain overlay ────────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: .5;
+  }
+
+  /* ── Top bar ──────────────────────────────────────── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px; flex-shrink: 0;
+    position: sticky; top: 0; z-index: 100;
+    background: var(--bg);
+  }
+
+  .logo {
+    font-family: var(--font-head);
+    font-size: 1.25rem;
+    letter-spacing: .03em;
+    color: var(--ink);
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .logo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  .base-url-wrap {
+    display: flex; align-items: center; gap: .5rem;
+    font-family: var(--font-mono); font-size: .72rem;
+  }
+  .base-url-wrap label { color: var(--ink-muted); }
+  #baseUrl {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--ink); padding: .3rem .6rem; border-radius: var(--radius);
+    font-family: var(--font-mono); font-size: .72rem; width: 230px;
+    outline: none; transition: border-color .2s;
+  }
+  #baseUrl:focus { border-color: var(--accent); }
+
+  /* ── Nav tabs ─────────────────────────────────────── */
+  nav {
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 0; padding: 0 2rem;
+    background: var(--bg); flex-shrink: 0;
+  }
+  .tab {
+    padding: .8rem 1.4rem;
+    font-size: .8rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink-muted); cursor: pointer; border: none; background: none;
+    border-bottom: 2px solid transparent; transition: color .2s, border-color .2s;
+    font-family: var(--font-body); font-weight: 400;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── Main layout ──────────────────────────────────── */
+  .main {
+    flex: 1; display: flex; overflow: hidden;
+  }
+
+  /* ── Panel content area ───────────────────────────── */
+  .panel {
+    flex: 1; overflow-y: auto; padding: 2rem;
+    display: none;
+  }
+  .panel.active { display: block; }
+
+  /* ── Section heading ──────────────────────────────── */
+  .section-title {
+    font-family: var(--font-head);
+    font-size: 1.6rem; font-weight: 400; font-style: italic;
+    color: var(--ink); margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .8rem;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ── Form controls ────────────────────────────────── */
+  .field { margin-bottom: 1rem; }
+  .field label {
+    display: block; font-size: .72rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-muted); margin-bottom: .4rem;
+  }
+  .field input, .field textarea, .field select {
+    width: 100%; background: var(--surface);
+    border: 1px solid var(--border); color: var(--ink);
+    padding: .65rem .9rem; border-radius: var(--radius);
+    font-family: var(--font-body); font-size: .9rem; font-weight: 300;
+    outline: none; transition: border-color .2s;
+    resize: vertical;
+  }
+  .field input:focus, .field textarea:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+  .field textarea { min-height: 120px; }
+
+  /* ── Buttons ──────────────────────────────────────── */
+  .btn {
+    padding: .6rem 1.4rem; border-radius: var(--radius);
+    font-family: var(--font-body); font-size: .82rem;
+    font-weight: 400; letter-spacing: .05em; cursor: pointer;
+    border: 1px solid transparent; transition: all .15s;
+  }
+  .btn-primary {
+    background: var(--accent); color: #0e0e0e; border-color: var(--accent);
+  }
+  .btn-primary:hover { background: #d4b87a; }
+  .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-ghost {
+    background: transparent; color: var(--ink-muted); border-color: var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--border-hi); color: var(--ink); }
+  .btn-danger {
+    background: transparent; color: var(--red); border-color: var(--red);
+  }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+
+  .btn-row { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .5rem; }
+
+  /* ── Response box ─────────────────────────────────── */
+  .response-box {
+    margin-top: 1.5rem; border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .response-box-head {
+    background: var(--surface); padding: .5rem 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .response-box-head span {
+    font-family: var(--font-mono); font-size: .7rem; color: var(--ink-muted);
+  }
+  .status-badge {
+    font-family: var(--font-mono); font-size: .7rem;
+    padding: .15rem .55rem; border-radius: 3px; font-weight: 500;
+  }
+  .status-ok   { background: #1a3626; color: var(--green); }
+  .status-err  { background: #3a1a1a; color: var(--red); }
+  .status-wait { background: var(--ink-faint); color: var(--ink-muted); }
+
+  .response-body {
+    padding: 1rem; background: var(--bg);
+    font-family: var(--font-mono); font-size: .75rem;
+    line-height: 1.7; color: var(--ink);
+    max-height: 320px; overflow-y: auto;
+    white-space: pre-wrap; word-break: break-all;
+  }
+
+  /* ── Journal cards ────────────────────────────────── */
+  .cards-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem; margin-top: 1rem;
+  }
+  .journal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.2rem;
+    transition: border-color .2s, transform .15s;
+    cursor: pointer; position: relative;
+  }
+  .journal-card:hover { border-color: var(--accent-dim); transform: translateY(-2px); }
+  .journal-card h3 {
+    font-family: var(--font-head); font-size: 1.05rem; font-weight: 400;
+    color: var(--ink); margin-bottom: .4rem; line-height: 1.3;
+  }
+  .journal-card p {
+    font-size: .82rem; color: var(--ink-muted); line-height: 1.6;
+    display: -webkit-box; -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .card-meta {
+    margin-top: .8rem; padding-top: .6rem;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .card-date { font-family: var(--font-mono); font-size: .67rem; color: var(--ink-muted); }
+  .card-views {
+    font-family: var(--font-mono); font-size: .67rem;
+    color: var(--accent); opacity: .8;
+  }
+  .tag-row { display: flex; gap: .3rem; flex-wrap: wrap; margin-top: .6rem; }
+  .tag {
+    font-size: .65rem; letter-spacing: .06em; text-transform: uppercase;
+    background: var(--ink-faint); color: var(--ink-muted);
+    padding: .15rem .5rem; border-radius: 3px;
+  }
+
+  /* ── Chat panel ───────────────────────────────────── */
+  .chat-layout {
+    display: flex; gap: 0; height: 100%; min-height: calc(100vh - 100px);
+  }
+
+  .chat-area {
+    flex: 1; display: flex; flex-direction: column; gap: 0;
+    min-width: 0;
+  }
+
+  #chatMessages {
+    flex: 1; overflow-y: auto; padding: 1.5rem;
+    display: flex; flex-direction: column; gap: 1rem;
+    min-height: 300px; max-height: calc(100vh - 240px);
+  }
+
+  .msg { display: flex; gap: .8rem; animation: fadeUp .2s ease; }
+  .msg.user { flex-direction: row-reverse; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: .65rem; flex-shrink: 0;
+    font-weight: 500;
+  }
+  .msg.user .msg-avatar   { background: var(--accent-dim); color: var(--accent); }
+  .msg.bot  .msg-avatar   { background: var(--ink-faint); color: var(--ink-muted); }
+
+  .msg-bubble {
+    max-width: 72%; padding: .75rem 1rem; border-radius: 12px;
+    font-size: .88rem; line-height: 1.6;
+  }
+  .msg.user .msg-bubble { background: var(--accent-dim); color: var(--accent); border-radius: 12px 4px 12px 12px; }
+  .msg.bot  .msg-bubble { background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 4px 12px 12px 12px; }
+
+  .chat-input-row {
+    border-top: 1px solid var(--border); padding: 1rem 1.5rem;
+    display: flex; gap: .6rem; align-items: flex-end;
+    background: var(--bg);
+  }
+  #chatInput {
+    flex: 1; background: var(--surface); border: 1px solid var(--border);
+    color: var(--ink); padding: .65rem .9rem; border-radius: var(--radius);
+    font-family: var(--font-body); font-size: .9rem; font-weight: 300;
+    outline: none; resize: none; transition: border-color .2s; min-height: 42px;
+  }
+  #chatInput:focus { border-color: var(--accent); }
+
+  /* ── Spinner ──────────────────────────────────────── */
+  .spinner {
+    width: 14px; height: 14px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin .6s linear infinite; display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Empty state ──────────────────────────────────── */
+  .empty {
+    text-align: center; padding: 3rem 1rem;
+    color: var(--ink-muted); font-size: .9rem;
+  }
+  .empty-icon {
+    font-size: 2rem; margin-bottom: .5rem; opacity: .4;
+    font-family: var(--font-head); font-style: italic;
+  }
+
+  /* ── Scrollbar ────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+  /* ── Toast ────────────────────────────────────────── */
+  #toast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--ink); padding: .6rem 1.2rem; border-radius: var(--radius);
+    font-size: .82rem; z-index: 9998;
+    transform: translateY(10px); opacity: 0; pointer-events: none;
+    transition: all .25s; font-family: var(--font-mono);
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ── Header ─────────────────────────────────────── -->
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    KnowThisThings
+  </div>
+  <div class="base-url-wrap">
+    <label for="baseUrl">API</label>
+    <input id="baseUrl" type="text" value="http://localhost:8080"/>
+  </div>
+</header>
+
+<!-- ── Nav ────────────────────────────────────────── -->
+<nav>
+  <button class="tab active" onclick="switchTab('browse')">Browse</button>
+  <button class="tab" onclick="switchTab('create')">New journal</button>
+  <button class="tab" onclick="switchTab('edit')">Edit / Delete</button>
+  <button class="tab" onclick="switchTab('chat')">AI Chat</button>
+</nav>
+
+<!-- ── Panels ─────────────────────────────────────── -->
+<div class="main">
+
+  <!-- BROWSE -->
+  <div id="panel-browse" class="panel active">
+    <div class="section-title">All journals</div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="loadJournals()">Load / Refresh</button>
+      <input id="searchQuery" placeholder="Search by keyword…"
+        style="background:var(--surface);border:1px solid var(--border);color:var(--ink);
+               padding:.5rem .8rem;border-radius:var(--radius);font-family:var(--font-body);
+               font-size:.85rem;outline:none;width:220px;" onkeydown="if(event.key==='Enter')searchJournals()"/>
+      <button class="btn btn-ghost" onclick="searchJournals()">Search</button>
+      <button class="btn btn-ghost" onclick="loadTrending()">Trending ↑</button>
+    </div>
+    <div id="cardsContainer" class="cards-grid" style="margin-top:1.5rem;">
+      <div class="empty"><div class="empty-icon">∅</div>Hit "Load" to fetch journals</div>
+    </div>
+  </div>
+
+  <!-- CREATE -->
+  <div id="panel-create" class="panel">
+    <div class="section-title">New journal</div>
+    <div style="max-width:580px;">
+      <div class="field">
+        <label>Title</label>
+        <input id="c-title" type="text" placeholder="e.g. Notes on distributed systems"/>
+      </div>
+      <div class="field">
+        <label>Content</label>
+        <textarea id="c-content" placeholder="Write your journal entry…" style="min-height:180px;"></textarea>
+      </div>
+      <div class="field">
+        <label>Tags (comma separated)</label>
+        <input id="c-tags" type="text" placeholder="java, spring, kafka"/>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="createJournal()">Publish</button>
+        <button class="btn btn-ghost" onclick="clearCreate()">Clear</button>
+      </div>
+      <div id="create-response"></div>
+    </div>
+  </div>
+
+  <!-- EDIT / DELETE -->
+  <div id="panel-edit" class="panel">
+    <div class="section-title">Edit / Delete</div>
+    <div style="max-width:580px;">
+      <div class="field">
+        <label>Journal ID</label>
+        <div style="display:flex;gap:.6rem;">
+          <input id="e-id" type="text" placeholder="MongoDB ObjectId…" style="flex:1"/>
+          <button class="btn btn-ghost" onclick="fetchOne()">Fetch</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Title</label>
+        <input id="e-title" type="text"/>
+      </div>
+      <div class="field">
+        <label>Content</label>
+        <textarea id="e-content" style="min-height:160px;"></textarea>
+      </div>
+      <div class="field">
+        <label>Tags (comma separated)</label>
+        <input id="e-tags" type="text"/>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="updateJournal()">Save changes</button>
+        <button class="btn btn-danger" onclick="deleteJournal()">Delete</button>
+      </div>
+      <div id="edit-response"></div>
+    </div>
+  </div>
+
+  <!-- CHAT -->
+  <div id="panel-chat" class="panel" style="padding:0;display:none;">
+    <div class="chat-area">
+      <div id="chatMessages">
+        <div class="msg bot">
+          <div class="msg-avatar">AI</div>
+          <div class="msg-bubble">Hi! I can help you find journals by topic, show you trending reads, or summarize any journal. What would you like to know?</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <textarea id="chatInput" rows="1" placeholder="Ask about journals…"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+        <button class="btn btn-primary" onclick="sendChat()" id="sendBtn">Send</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- .main -->
+
+<script>
+// ── Helpers ───────────────────────────────────────────────
+const base = () => document.getElementById('baseUrl').value.replace(/\/$/, '');
+let conversationId = crypto.randomUUID();
+
+function toast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isErr ? 'var(--red)' : 'var(--accent)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function renderResponse(containerId, data, status) {
+  const box = document.getElementById(containerId);
+  const ok = status >= 200 && status < 300;
+  box.innerHTML = `
+    <div class="response-box">
+      <div class="response-box-head">
+        <span>Response</span>
+        <span class="status-badge ${ok ? 'status-ok' : 'status-err'}">${status}</span>
+      </div>
+      <div class="response-body">${JSON.stringify(data, null, 2)}</div>
+    </div>`;
+}
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(base() + path, opts);
+  let data;
+  try { data = await res.json(); } catch { data = { message: await res.text() }; }
+  return { status: res.status, data };
+}
+
+// ── Tab switching ─────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById('panel-' + name);
+  panel.style.display = 'block';
+  panel.classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── Browse ────────────────────────────────────────────────
+async function loadJournals() {
+  document.getElementById('cardsContainer').innerHTML =
+    '<div class="empty"><div class="spinner"></div></div>';
+  try {
+    const { status, data } = await api('GET', '/api/journal-entries');
+    renderCards(data);
+  } catch(e) { toast('Connection failed — is Spring Boot running?', true); }
+}
+
+async function searchJournals() {
+  const q = document.getElementById('searchQuery').value.trim();
+  if (!q) return loadJournals();
+  const { status, data } = await api('GET', `/api/journal-entries/search?query=${encodeURIComponent(q)}`);
+  renderCards(data);
+}
+
+async function loadTrending() {
+  const { status, data } = await api('GET', '/api/journal-entries/trending');
+  renderCards(data);
+}
+
+function renderCards(data) {
+  const arr = Array.isArray(data) ? data : (data.content || data.journals || []);
+  if (!arr.length) {
+    document.getElementById('cardsContainer').innerHTML =
+      '<div class="empty"><div class="empty-icon">∅</div>No journals found</div>';
+    return;
+  }
+  document.getElementById('cardsContainer').innerHTML = arr.map(j => `
+    <div class="journal-card" onclick="prefillEdit('${j.id||j._id}')">
+      <h3>${escape(j.title || 'Untitled')}</h3>
+      <p>${escape(j.content || '')}</p>
+      ${(j.tags||[]).length ? `<div class="tag-row">${j.tags.map(t=>`<span class="tag">${escape(t)}</span>`).join('')}</div>` : ''}
+      <div class="card-meta">
+        <span class="card-date">${j.createdAt ? new Date(j.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : ''}</span>
+        ${j.viewCount != null ? `<span class="card-views">${j.viewCount} reads</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function escape(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Create ────────────────────────────────────────────────
+async function createJournal() {
+  const title   = document.getElementById('c-title').value.trim();
+  const content = document.getElementById('c-content').value.trim();
+  const tags    = document.getElementById('c-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  if (!title || !content) { toast('Title and content are required', true); return; }
+
+  const btn = document.querySelector('#panel-create .btn-primary');
+  btn.disabled = true; btn.textContent = 'Publishing…';
+  try {
+    const { status, data } = await api('POST', '/api/journal-entries', { title, content, tags });
+    renderResponse('create-response', data, status);
+    if (status === 201 || status === 200) { toast('Journal published ✓'); clearCreate(); }
+  } finally { btn.disabled = false; btn.textContent = 'Publish'; }
+}
+
+function clearCreate() {
+  ['c-title','c-content','c-tags'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('create-response').innerHTML = '';
+}
+
+// ── Edit / Delete ─────────────────────────────────────────
+async function fetchOne() {
+  const id = document.getElementById('e-id').value.trim();
+  if (!id) { toast('Enter an ID first', true); return; }
+  const { status, data } = await api('GET', `/api/journal-entries/${id}`);
+  if (status === 200) {
+    document.getElementById('e-title').value   = data.title || '';
+    document.getElementById('e-content').value = data.content || '';
+    document.getElementById('e-tags').value    = (data.tags || []).join(', ');
+    renderResponse('edit-response', data, status);
+  } else {
+    renderResponse('edit-response', data, status);
+  }
+}
+
+function prefillEdit(id) {
+  document.getElementById('e-id').value = id;
+  switchTab('edit');
+  document.querySelectorAll('.tab')[2].classList.add('active');
+  document.querySelectorAll('.tab')[0].classList.remove('active');
+  fetchOne();
+}
+
+async function updateJournal() {
+  const id      = document.getElementById('e-id').value.trim();
+  const title   = document.getElementById('e-title').value.trim();
+  const content = document.getElementById('e-content').value.trim();
+  const tags    = document.getElementById('e-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  if (!id) { toast('Enter an ID', true); return; }
+  const { status, data } = await api('PUT', `/api/journal-entries/${id}`, { title, content, tags });
+  renderResponse('edit-response', data, status);
+  if (status === 200) toast('Updated ✓');
+}
+
+async function deleteJournal() {
+  const id = document.getElementById('e-id').value.trim();
+  if (!id) { toast('Enter an ID', true); return; }
+  if (!confirm('Delete this journal?')) return;
+  const { status, data } = await api('DELETE', `/api/journal-entries/${id}`);
+  renderResponse('edit-response', data, status);
+  if (status === 200 || status === 204) toast('Deleted');
+}
+
+// ── Chat ──────────────────────────────────────────────────
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  appendMsg('user', msg);
+  const typingId = appendMsg('bot', '<div class="spinner"></div>');
+  document.getElementById('sendBtn').disabled = true;
+
+  try {
+    const { status, data } = await api('POST', '/api/journal-entries/chat', {
+      message: msg,
+      conversationId
+    });
+    const reply = data.response || data.message || data.content || JSON.stringify(data);
+    updateMsg(typingId, reply);
+  } catch(e) {
+    updateMsg(typingId, '⚠ Could not reach the chat endpoint.');
+  } finally {
+    document.getElementById('sendBtn').disabled = false;
+  }
+}
+
+function appendMsg(role, html) {
+  const id = 'msg-' + Date.now() + Math.random().toString(36).slice(2);
+  const avatar = role === 'user' ? 'You' : 'AI';
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.id = id;
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-bubble">${html}</div>`;
+  document.getElementById('chatMessages').appendChild(div);
+  div.scrollIntoView({ behavior: 'smooth' });
+  return id;
+}
+
+function updateMsg(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.querySelector('.msg-bubble').textContent = text;
+}
+
+// ── Auto-expand textarea ──────────────────────────────────
+document.getElementById('chatInput').addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+</script>
+</body>
+</html>

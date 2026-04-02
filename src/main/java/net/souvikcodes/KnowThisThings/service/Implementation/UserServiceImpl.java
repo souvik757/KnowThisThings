@@ -1,0 +1,73 @@
+package net.souvikcodes.KnowThisThings.service.Implementation;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.bson.types.ObjectId;
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import net.souvikcodes.KnowThisThings.entity.Users;
+import net.souvikcodes.KnowThisThings.exception.customexception.ResourceNotFoundException;
+import net.souvikcodes.KnowThisThings.repository.IUserRepository;
+import net.souvikcodes.KnowThisThings.service.IUserService;
+
+@Service
+@RequiredArgsConstructor
+public class UserServiceImpl implements IUserService {
+
+    private final IUserRepository userRepository;
+
+    @Override
+    public void saveUser(Users user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+        userRepository.save(user);
+    }
+
+    @Override
+    public List<Users> getAll() {
+        List<Users> users = userRepository.findAll();
+        if (users.isEmpty()) {
+            throw new ResourceNotFoundException("No users found");
+        }
+        return users;
+    }
+
+    @Override
+    public Optional<Users> findById(ObjectId id) {
+        if (id == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+        Optional<Users> user = userRepository.findById(id);
+        if (user.isEmpty()) {
+            throw new ResourceNotFoundException("User not found with id: " + id);
+        }
+        return user;
+    }
+
+    @Override
+    public void deleteById(ObjectId id) {
+        if (id == null) {
+            throw new IllegalArgumentException("User ID cannot be null");
+        }
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("User not found with id: " + id);
+        }
+        userRepository.deleteById(id);
+    }
+
+    @Override
+    public Users findByUserName(String userName) {
+        if (userName == null || userName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        Users user = userRepository.findByUsername(userName);
+        if (user == null) {
+            throw new ResourceNotFoundException("User not found with username: " + userName);
+        }
+        return user;
+    }
+
+}

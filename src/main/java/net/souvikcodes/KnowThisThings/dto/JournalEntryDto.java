@@ -1,5 +1,8 @@
 package net.souvikcodes.KnowThisThings.dto;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.hibernate.validator.constraints.UniqueElements;
 
 import jakarta.validation.constraints.NotBlank;
@@ -10,6 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class JournalEntryDto {
+    private String id ;
     @NotBlank(message = "Title cannot be blank")
     @Size(max = 50, message = "Title cannot exceed 50 characters")
     private String title ;
@@ -17,4 +21,7 @@ public class JournalEntryDto {
     @Size(max = 1000, message = "Content cannot exceed 1000 characters")
     @UniqueElements(message = "Same Content already exists")
     private String content;
+    private List<String> tags;
+    private Integer viewCount;
+    private LocalDateTime createdAt;
 }

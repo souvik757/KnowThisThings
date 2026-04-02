@@ -5,6 +5,9 @@ spring:
     additional-hosts:
     - localhost:27017
     database: knowthisthings
+  data:
+      mongodb:
+              auto-index-creation: true
 # logging configuration to show the queries being executed by MongoTemplate
 logging:
     level:
