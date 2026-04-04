@@ -11,6 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class JournalEntryDto {
+    private String id;
     @NotBlank(message = "Title cannot be blank")
     @Size(max = 50, message = "Title cannot exceed 50 characters")
     private String title ;
