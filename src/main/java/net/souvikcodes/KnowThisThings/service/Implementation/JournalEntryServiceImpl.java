@@ -26,11 +26,11 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     private final IUserService userService;
 
     @Override
-    public JournalEntryDto createJournalEntry(JournalEntryDto journalEntryDto) {
-
+    public JournalEntryDto createJournalEntryForUser(JournalEntryDto journalEntryDto, String username) {
+        Users user = verifyUserByUsername(username);
         JournalEntry journalEntry = modelMapper.map(journalEntryDto, JournalEntry.class);
         JournalEntry savedJournalEntry = journalEntryRepository.save(journalEntry);
-
+        associateJournalWithUser(savedJournalEntry, user);
         return modelMapper.map(savedJournalEntry, JournalEntryDto.class);
     }
 
@@ -50,20 +50,45 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     }
 
     @Override
-    public JournalEntryDto updateJournalEntry(String id, JournalEntryDto journalEntryDto) {
+    public List<JournalEntryDto> getAllJournalEntriesForUser(String username) {
+        Users user = verifyUserByUsername(username);
+        List<JournalEntry> journalEntries = user.getJournalEntries();
+        if (journalEntries == null || journalEntries.isEmpty()) {
+            return List.of();
+        }
+        return journalEntries.stream()
+                .map(entry -> modelMapper.map(entry, JournalEntryDto.class))
+                .toList();
+    }
+
+    @Override
+    public JournalEntryDto updateJournalEntryForUser(String username, String id, JournalEntryDto journalEntryDto) {
+        Users user = verifyUserByUsername(username);
         JournalEntry existingJournalEntry = journalEntryRepository.findById(id)
-                                            .orElseThrow(() -> new ResourceNotFoundException("Journal entry not found with id: " + id));
-        modelMapper.map(journalEntryDto, existingJournalEntry);
+                .orElseThrow(() -> new ResourceNotFoundException("Journal entry not found with id: " + id));
+
+        if (!user.getJournalEntries().contains(existingJournalEntry)) {
+            throw new JournalEntryException("Journal entry does not belong to user: " + username);
+        }
+
+        existingJournalEntry.setTitle(journalEntryDto.getTitle());
+        existingJournalEntry.setContent(journalEntryDto.getContent());
+
         JournalEntry updatedJournalEntry = journalEntryRepository.save(existingJournalEntry);
         return modelMapper.map(updatedJournalEntry, JournalEntryDto.class);
     }
 
     @Override
-    public void deleteJournalEntry(String id) {
-        if (journalEntryRepository.existsById(id)) {
-            journalEntryRepository.deleteById(id);
+    public void deleteJournalEntryForUser(String username, String id) {
+        Users user = verifyUserByUsername(username);
+        JournalEntry existingJournalEntry = journalEntryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Journal entry not found with id: " + id));
+
+        if (!user.getJournalEntries().contains(existingJournalEntry)) {
+            throw new JournalEntryException("Journal entry does not belong to user: " + username);
         }
-        throw new JournalEntryException("Journal entry not found with id: " + id);
+
+        journalEntryRepository.deleteById(id);
     }
 
     // For admin only
@@ -118,4 +143,6 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
                 .map(entry -> modelMapper.map(entry, JournalEntryDto.class))
                 .toList();
     }
+
+
 }

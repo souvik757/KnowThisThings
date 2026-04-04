@@ -28,32 +28,39 @@ public class JournalEntryContoller {
     
     private final IJournalEntryService journalEntryService ;
 
-    @GetMapping("/{id}")
+    @GetMapping("/random/{id}")
     public ResponseEntity<JournalEntryDto> getJournalEntryById(@PathVariable String id) {
         JournalEntryDto journalEntry = journalEntryService.getJournalEntryById(id);
         return ResponseEntity.ok(journalEntry);
     }
-
+    /*
+    Paginated entries will be added.
+    */
     @GetMapping
     public ResponseEntity<List<JournalEntryDto>> getAllJournalEntries() {
         return ResponseEntity.ok(journalEntryService.getAllJournalEntries());
     }
 
-    @PostMapping
-    public ResponseEntity<JournalEntryDto> createJournalEntry(@Valid @RequestBody JournalEntryDto journalEntryDto) {
-        JournalEntryDto createdJournalEntry = journalEntryService.createJournalEntry(journalEntryDto);
+    @GetMapping("{username}")
+    public ResponseEntity<List<JournalEntryDto>> getAllJournalEntriesForUser(@PathVariable String username) {
+        return ResponseEntity.ok(journalEntryService.getAllJournalEntriesForUser(username));
+    }
+
+    @PostMapping("{username}")
+    public ResponseEntity<JournalEntryDto> createJournalEntryForUser(@PathVariable String username, @Valid @RequestBody JournalEntryDto journalEntryDto) {
+        JournalEntryDto createdJournalEntry = journalEntryService.createJournalEntryForUser(journalEntryDto, username);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdJournalEntry);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<JournalEntryDto> updateJournalEntry(@PathVariable String id, @Valid @RequestBody JournalEntryDto journalEntryDto) {
-        JournalEntryDto updatedJournalEntry = journalEntryService.updateJournalEntry(id, journalEntryDto);
+    @PutMapping("/{username}/{id}")
+    public ResponseEntity<JournalEntryDto> updateJournalEntryForUser(@PathVariable String username, @PathVariable String id, @Valid @RequestBody JournalEntryDto journalEntryDto) {
+        JournalEntryDto updatedJournalEntry = journalEntryService.updateJournalEntryForUser(username, id, journalEntryDto);
         return ResponseEntity.ok(updatedJournalEntry);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteJournalEntry(@PathVariable String id) {
-        journalEntryService.deleteJournalEntry(id);
+    @DeleteMapping("/{username}/{id}")
+    public ResponseEntity<Void> deleteJournalEntryForUser(@PathVariable String username, @PathVariable String id) {
+        journalEntryService.deleteJournalEntryForUser(username, id);
         return ResponseEntity.noContent().build();
     }
 

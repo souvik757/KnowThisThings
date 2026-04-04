@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>KnowThisThings — Journal</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — KnowThisThings</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Lato:wght@300;400&display=swap" rel="stylesheet"/>
 <style>
@@ -327,17 +327,26 @@
     <div class="logo-dot"></div>
     KnowThisThings
   </div>
-  <div class="base-url-wrap">
-    <label for="baseUrl">API</label>
-    <input id="baseUrl" type="text" value="http://localhost:8080"/>
+  <div style="display: flex; align-items: center; gap: 1.5rem;">
+    <div class="base-url-wrap">
+      <label for="baseUrl">API</label>
+      <input id="baseUrl" type="text" value="http://localhost:8080"/>
+    </div>
+    <div id="authSection" style="display: flex; align-items: center; gap: 0.8rem; font-size: 0.85rem;">
+      <span id="currentUserDisplay" style="color: var(--ink-muted); display: none;"></span>
+      <button class="btn btn-ghost" id="profileBtn" style="display: none;">Profile</button>
+      <button class="btn btn-danger" id="logoutBtn" style="display: none;">Logout</button>
+      <button class="btn btn-primary" id="loginBtn" style="display: none;">Login</button>
+    </div>
   </div>
 </header>
 
 <!-- ── Nav ────────────────────────────────────────── -->
 <nav>
   <button class="tab active" onclick="switchTab('browse')">Browse</button>
-  <button class="tab" onclick="switchTab('create')">New journal</button>
-  <button class="tab" onclick="switchTab('edit')">Edit / Delete</button>
+  <button class="tab" id="myJournalsTab" onclick="switchTab('my-journals')" style="display: none;">My Journals</button>
+  <button class="tab" id="createTab" onclick="switchTab('create')" style="display: none;">New journal</button>
+  <button class="tab" id="editTab" onclick="switchTab('edit')" style="display: none;">Edit / Delete</button>
   <button class="tab" onclick="switchTab('chat')">AI Chat</button>
 </nav>
 
@@ -433,9 +442,94 @@
     </div>
   </div>
 
+  <!-- MY JOURNALS -->
+  <div id="panel-my-journals" class="panel" style="display: none;">
+    <div class="section-title">My Journals</div>
+    <div id="myJournalsLoadingState" class="empty">
+      <div class="spinner"></div>
+      <p>Loading your journals...</p>
+    </div>
+    <div id="myJournalsContainer" class="cards-grid" style="display: none;">
+    </div>
+    <div id="myJournalsEmptyState" class="empty" style="display: none;">
+      <div class="empty-icon">∅</div>
+      <p>You haven't created any journals yet</p>
+      <button class="btn btn-primary" onclick="switchTab('create')" style="margin-top: 1rem;">Create Your First Journal</button>
+    </div>
+  </div>
+
 </div><!-- .main -->
 
 <script>
+// ── Authentication & User State ─────────────────────────
+let currentUser = null;
+let currentUsername = null;
+let isLoadingMyJournals = false;
+
+function initializeAuth() {
+  const storedUser = localStorage.getItem('currentUser');
+  const storedUsername = localStorage.getItem('username');
+
+  if (!storedUser || !storedUsername) {
+    // Not authenticated, redirect to login
+    window.location.href = '/login.html';
+    return;
+  }
+
+  try {
+    currentUser = JSON.parse(storedUser);
+    currentUsername = storedUsername;
+    showLoggedInState();
+  } catch (e) {
+    // Invalid stored data, clear and redirect to login
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = '/login.html';
+  }
+}
+
+function showLoggedInState() {
+  document.getElementById('currentUserDisplay').textContent = `Logged in as ${currentUsername}`;
+  document.getElementById('currentUserDisplay').style.display = 'inline';
+  document.getElementById('profileBtn').style.display = 'inline-block';
+  document.getElementById('logoutBtn').style.display = 'inline-block';
+  document.getElementById('loginBtn').style.display = 'none';
+  document.getElementById('myJournalsTab').style.display = 'inline-block';
+  document.getElementById('createTab').style.display = 'inline-block';
+  document.getElementById('editTab').style.display = 'inline-block';
+}
+
+function showLoggedOutState() {
+  document.getElementById('currentUserDisplay').style.display = 'none';
+  document.getElementById('profileBtn').style.display = 'none';
+  document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('loginBtn').style.display = 'inline-block';
+  document.getElementById('myJournalsTab').style.display = 'none';
+  document.getElementById('createTab').style.display = 'none';
+  document.getElementById('editTab').style.display = 'none';
+}
+
+document.getElementById('loginBtn').addEventListener('click', () => {
+  window.location.href = '/login.html';
+});
+
+document.getElementById('profileBtn').addEventListener('click', () => {
+  window.location.href = '/profile.html';
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  localStorage.clear();
+  sessionStorage.clear();
+  currentUser = null;
+  currentUsername = null;
+  toast('Logged out ✓');
+  // Redirect to login page
+  window.location.href = '/login.html';
+});
+
+// Initialize auth on page load
+window.addEventListener('load', initializeAuth);
+
 // ── Helpers ───────────────────────────────────────────────
 const base = () => document.getElementById('baseUrl').value.replace(/\/$/, '');
 let conversationId = crypto.randomUUID();
@@ -474,7 +568,7 @@ async function api(method, path, body) {
 }
 
 // ── Tab switching ─────────────────────────────────────────
-function switchTab(name) {
+function switchTab(name, tabElement) {
   document.querySelectorAll('.panel').forEach(p => {
     p.classList.remove('active');
     p.style.display = 'none';
@@ -483,7 +577,21 @@ function switchTab(name) {
   const panel = document.getElementById('panel-' + name);
   panel.style.display = 'block';
   panel.classList.add('active');
-  event.target.classList.add('active');
+  
+  if (tabElement) {
+    tabElement.classList.add('active');
+  } else if (event && event.target) {
+    event.target.classList.add('active');
+  }
+
+  // Load My Journals data when switching to that tab
+  if (name === 'my-journals') {
+    if (!currentUser || !currentUsername) {
+      toast('Please login to view your journals', true);
+      return;
+    }
+    loadMyJournals();
+  }
 }
 
 // ── Browse ────────────────────────────────────────────────
@@ -533,6 +641,11 @@ function escape(s) {
 
 // ── Create ────────────────────────────────────────────────
 async function createJournal() {
+  if (!currentUser || !currentUsername) {
+    toast('Please login first to create a journal', true);
+    return;
+  }
+
   const title   = document.getElementById('c-title').value.trim();
   const content = document.getElementById('c-content').value.trim();
   const tags    = document.getElementById('c-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
@@ -541,7 +654,7 @@ async function createJournal() {
   const btn = document.querySelector('#panel-create .btn-primary');
   btn.disabled = true; btn.textContent = 'Publishing…';
   try {
-    const { status, data } = await api('POST', '/api/journal-entries', { title, content, tags });
+    const { status, data } = await api('POST', `/api/journal-entries/${currentUsername}`, { title, content, tags });
     renderResponse('create-response', data, status);
     if (status === 201 || status === 200) { toast('Journal published ✓'); clearCreate(); }
   } finally { btn.disabled = false; btn.textContent = 'Publish'; }
@@ -576,23 +689,109 @@ function prefillEdit(id) {
 }
 
 async function updateJournal() {
+  if (!currentUser || !currentUsername) {
+    toast('Please login first', true);
+    return;
+  }
+
   const id      = document.getElementById('e-id').value.trim();
   const title   = document.getElementById('e-title').value.trim();
   const content = document.getElementById('e-content').value.trim();
   const tags    = document.getElementById('e-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
   if (!id) { toast('Enter an ID', true); return; }
-  const { status, data } = await api('PUT', `/api/journal-entries/${id}`, { title, content, tags });
+  const { status, data } = await api('PUT', `/api/journal-entries/${currentUsername}/${id}`, { title, content, tags });
   renderResponse('edit-response', data, status);
   if (status === 200) toast('Updated ✓');
 }
 
 async function deleteJournal() {
+  if (!currentUser || !currentUsername) {
+    toast('Please login first', true);
+    return;
+  }
+
   const id = document.getElementById('e-id').value.trim();
   if (!id) { toast('Enter an ID', true); return; }
   if (!confirm('Delete this journal?')) return;
-  const { status, data } = await api('DELETE', `/api/journal-entries/${id}`);
+  const { status, data } = await api('DELETE', `/api/journal-entries/${currentUsername}/${id}`);
   renderResponse('edit-response', data, status);
   if (status === 200 || status === 204) toast('Deleted');
+}
+
+// ── My Journals ───────────────────────────────────────────
+async function loadMyJournals() {
+  // Prevent multiple simultaneous calls
+  if (isLoadingMyJournals) return;
+  isLoadingMyJournals = true;
+
+  if (!currentUser || !currentUsername) {
+    document.getElementById('myJournalsLoadingState').style.display = 'none';
+    document.getElementById('myJournalsEmptyState').style.display = 'block';
+    isLoadingMyJournals = false;
+    return;
+  }
+
+  document.getElementById('myJournalsLoadingState').style.display = 'block';
+  document.getElementById('myJournalsContainer').style.display = 'none';
+  document.getElementById('myJournalsEmptyState').style.display = 'none';
+
+  try {
+    const { status, data } = await api('GET', `/api/journal-entries/${currentUsername}`);
+    
+    const arr = Array.isArray(data) ? data : (data.content || data.journals || data || []);
+    
+    document.getElementById('myJournalsLoadingState').style.display = 'none';
+    
+    if (!arr || arr.length === 0) {
+      document.getElementById('myJournalsEmptyState').style.display = 'block';
+      document.getElementById('myJournalsContainer').style.display = 'none';
+    } else {
+      document.getElementById('myJournalsContainer').style.display = 'grid';
+      document.getElementById('myJournalsEmptyState').style.display = 'none';
+      renderMyJournalsCards(arr);
+    }
+  } catch(e) {
+    console.error('Error loading journals:', e);
+    document.getElementById('myJournalsLoadingState').style.display = 'none';
+    document.getElementById('myJournalsEmptyState').style.display = 'block';
+    toast('Failed to load your journals', true);
+  } finally {
+    isLoadingMyJournals = false;
+  }
+}
+
+function renderMyJournalsCards(data) {
+  const arr = Array.isArray(data) ? data : (data.content || data.journals || []);
+  if (!arr.length) {
+    document.getElementById('myJournalsContainer').innerHTML = '';
+    document.getElementById('myJournalsEmptyState').style.display = 'block';
+    return;
+  }
+  document.getElementById('myJournalsContainer').innerHTML = arr.map(j => `
+    <div class="journal-card">
+      <h3>${escape(j.title || 'Untitled')}</h3>
+      <p>${escape(j.content || '')}</p>
+      ${(j.tags||[]).length ? `<div class="tag-row">${j.tags.map(t=>`<span class="tag">${escape(t)}</span>`).join('')}</div>` : ''}
+      <div class="card-meta">
+        <span class="card-date">${j.dateCreated ? new Date(j.dateCreated).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) : ''}</span>
+        ${j.viewCount != null ? `<span class="card-views">${j.viewCount} reads</span>` : ''}
+      </div>
+      <div class="btn-row" style="margin-top: 0.8rem; gap: 0.4rem;">
+        <button class="btn btn-ghost" style="flex: 1; padding: 0.4rem 0.6rem; font-size: 0.75rem;" onclick="prefillEdit('${j.id}')">Edit</button>
+        <button class="btn btn-danger" style="flex: 1; padding: 0.4rem 0.6rem; font-size: 0.75rem;" onclick="deleteMyJournal('${j.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+async function deleteMyJournal(id) {
+  if (!confirm('Delete this journal?')) return;
+  const { status, data } = await api('DELETE', `/api/journal-entries/${currentUsername}/${id}`);
+  if (status === 200 || status === 204) {
+    toast('Deleted ✓');
+    loadMyJournals();
+  } else {
+    toast('Failed to delete journal', true);
+  }
 }
 
 // ── Chat ──────────────────────────────────────────────────

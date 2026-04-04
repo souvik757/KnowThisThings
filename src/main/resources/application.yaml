@@ -8,6 +8,8 @@ spring:
   data:
       mongodb:
               auto-index-creation: true
+server:
+  port: 8081
 # logging configuration to show the queries being executed by MongoTemplate
 logging:
     level:

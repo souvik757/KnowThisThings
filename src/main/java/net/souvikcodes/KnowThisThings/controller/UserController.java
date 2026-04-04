@@ -1,6 +1,7 @@
 package net.souvikcodes.KnowThisThings.controller;
 
 import org.bson.types.ObjectId;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,11 +13,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import net.souvikcodes.KnowThisThings.dto.UsersDto;
 import net.souvikcodes.KnowThisThings.entity.Users;
 import net.souvikcodes.KnowThisThings.service.IUserService;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,53 +27,43 @@ import java.util.Optional;
 public class UserController {
     
     private final IUserService userService;
+    private final ModelMapper modelMapper;
 
-    /**
-     * Get all users
-     */
     @GetMapping
-    public ResponseEntity<List<Users>> getAllUsers() {
+    public ResponseEntity<List<UsersDto>> getAllUsers() {
         List<Users> users = userService.getAll();
-        return ResponseEntity.ok(users);
+        List<UsersDto> userDtos = users.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(userDtos);
     }
 
-    /**
-     * Get user by ID
-     */
     @GetMapping("/{id}")
-    public ResponseEntity<Users> getUserById(@PathVariable String id) {
+    public ResponseEntity<UsersDto> getUserById(@PathVariable String id) {
         ObjectId objectId = new ObjectId(id);
         Optional<Users> user = userService.findById(objectId);
-        return user.map(ResponseEntity::ok)
+        return user.map(u -> ResponseEntity.ok(convertToDto(u)))
                    .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * Get user by username
-     */
     @GetMapping("/username/{username}")
-    public ResponseEntity<Users> getUserByUsername(@PathVariable String username) {
+    public ResponseEntity<UsersDto> getUserByUsername(@PathVariable String username) {
         Users user = userService.findByUserName(username);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(convertToDto(user));
     }
 
-    /**
-     * Create new user
-     */
     @PostMapping
-    public ResponseEntity<Users> createUser(@RequestBody Users user) {
-        if (user == null || user.getUsername() == null) {
+    public ResponseEntity<UsersDto> createUser(@RequestBody UsersDto userDto) {
+        if (userDto == null || userDto.getUsername() == null) {
             return ResponseEntity.badRequest().build();
         }
+        Users user = convertToEntity(userDto);
         userService.saveUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(user));
     }
 
-    /**
-     * Update user
-     */
     @PostMapping("/{id}")
-    public ResponseEntity<Users> updateUser(@PathVariable String id, @RequestBody Users updatedUser) {
+    public ResponseEntity<UsersDto> updateUser(@PathVariable String id, @RequestBody UsersDto updatedUserDto) {
         ObjectId objectId = new ObjectId(id);
         Optional<Users> existingUser = userService.findById(objectId);
         
@@ -79,23 +72,17 @@ public class UserController {
         }
         
         Users user = existingUser.get();
-        if (updatedUser.getUsername() != null) {
-            user.setUsername(updatedUser.getUsername());
+        if (updatedUserDto.getUsername() != null) {
+            user.setUsername(updatedUserDto.getUsername());
         }
-        if (updatedUser.getPassword() != null) {
-            user.setPassword(updatedUser.getPassword());
-        }
-        if (updatedUser.getJournalEntries() != null) {
-            user.setJournalEntries(updatedUser.getJournalEntries());
+        if (updatedUserDto.getPassword() != null) {
+            user.setPassword(updatedUserDto.getPassword());
         }
         
         userService.saveUser(user);
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(convertToDto(user));
     }
 
-    /**
-     * Delete user by ID
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         ObjectId objectId = new ObjectId(id);
@@ -103,13 +90,19 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Delete user by username
-     */
     @DeleteMapping("/username/{username}")
     public ResponseEntity<Void> deleteUserByUsername(@PathVariable String username) {
         Users user = userService.findByUserName(username);
         userService.deleteById(user.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    // ── Helper methods to convert between Entity and DTO ──
+    private UsersDto convertToDto(Users user) {
+        return modelMapper.map(user, UsersDto.class);
+    }
+
+    private Users convertToEntity(UsersDto dto) {
+        return modelMapper.map(dto, Users.class);
     }
 }
