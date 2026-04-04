@@ -1,5 +1,6 @@
 package net.souvikcodes.KnowThisThings.service.Implementation;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.types.ObjectId;
@@ -88,6 +89,11 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
             throw new JournalEntryException("Journal entry does not belong to user: " + username);
         }
 
+        // Remove from user's journal list
+        user.getJournalEntries().remove(existingJournalEntry);
+        userService.saveUser(user);
+        
+        // Delete from repository
         journalEntryRepository.deleteById(id);
     }
 
@@ -124,7 +130,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
      */
     public void associateJournalWithUser(JournalEntry journalEntry, Users user) {
         if (user.getJournalEntries() == null) {
-            user.setJournalEntries(new java.util.ArrayList<>());
+            user.setJournalEntries(new ArrayList<>());
         }
         user.getJournalEntries().add(journalEntry);
         userService.saveUser(user);
