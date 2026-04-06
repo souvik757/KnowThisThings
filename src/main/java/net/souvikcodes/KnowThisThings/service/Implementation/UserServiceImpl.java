@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.bson.types.ObjectId;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -17,12 +18,15 @@ import net.souvikcodes.KnowThisThings.service.IUserService;
 public class UserServiceImpl implements IUserService {
 
     private final IUserRepository userRepository;
+    private static final PasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
 
     @Override
     public void saveUser(Users user) {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRoles(List.of("USER"));
         userRepository.save(user);
     }
 

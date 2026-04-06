@@ -6,6 +6,7 @@ import java.util.List;
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import net.souvikcodes.KnowThisThings.dto.JournalEntryAdminDto;
@@ -27,6 +28,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     private final IUserService userService;
 
     @Override
+    @Transactional
     public JournalEntryDto createJournalEntryForUser(JournalEntryDto journalEntryDto, String username) {
         Users user = verifyUserByUsername(username);
         JournalEntry journalEntry = modelMapper.map(journalEntryDto, JournalEntry.class);
@@ -63,12 +65,13 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     }
 
     @Override
+    @Transactional
     public JournalEntryDto updateJournalEntryForUser(String username, String id, JournalEntryDto journalEntryDto) {
         Users user = verifyUserByUsername(username);
         JournalEntry existingJournalEntry = journalEntryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Journal entry not found with id: " + id));
 
-        if (!user.getJournalEntries().contains(existingJournalEntry)) {
+        if (!user.getJournalEntries().stream().anyMatch(entry -> entry.getId().equals(id))) {
             throw new JournalEntryException("Journal entry does not belong to user: " + username);
         }
 
@@ -80,12 +83,13 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     }
 
     @Override
+    @Transactional
     public void deleteJournalEntryForUser(String username, String id) {
         Users user = verifyUserByUsername(username);
         JournalEntry existingJournalEntry = journalEntryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Journal entry not found with id: " + id));
 
-        if (!user.getJournalEntries().contains(existingJournalEntry)) {
+        if (!user.getJournalEntries().stream().anyMatch(entry -> entry.getId().equals(id))) {
             throw new JournalEntryException("Journal entry does not belong to user: " + username);
         }
 
