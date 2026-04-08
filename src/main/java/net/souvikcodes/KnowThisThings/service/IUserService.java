@@ -9,6 +9,7 @@ import net.souvikcodes.KnowThisThings.entity.Users;
 
 public interface IUserService {
     public void saveUser(Users user);
+    public void updateUser(Users user);
     public List<Users> getAll();
     public Optional<Users> findById(ObjectId id);
     public void deleteById(ObjectId id);

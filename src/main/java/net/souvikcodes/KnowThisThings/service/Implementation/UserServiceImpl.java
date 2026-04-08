@@ -33,6 +33,19 @@ public class UserServiceImpl implements IUserService {
         userRepository.save(user);
     }
 
+    /**
+     * Save user without encoding password (for updates, when password is already encoded)
+     */
+    @Transactional
+    public void updateUser(Users user) {
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+        user.setUsername(user.getUsername().trim());
+        // Don't encode password - it's already encoded
+        userRepository.save(user);
+    }
+
     @Override
     public Users findByUserName(String userName) {
         if (userName == null || userName.trim().isEmpty()) {

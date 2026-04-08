@@ -96,7 +96,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
 
         // Remove from user's journal list
         user.getJournalEntries().remove(existingJournalEntry);
-        userService.saveUser(user);
+        userService.updateUser(user);
         
         // Delete from repository
         journalEntryRepository.deleteById(id);
@@ -138,7 +138,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
             user.setJournalEntries(new ArrayList<>());
         }
         user.getJournalEntries().add(journalEntry);
-        userService.saveUser(user);
+        userService.updateUser(user);
     }
 
     /**
@@ -157,9 +157,15 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
 
     private Users verifyUserIsAuthenticated(String username){
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        System.out.println("DEBUG - Authenticated user: '" + currentUsername + "'");
+        System.out.println("DEBUG - Requested user: '" + username + "'");
+        
         Users user = verifyUserByUsername(username);
-        if (!currentUsername.equals(username)) {
-            throw new JournalEntryException("Unauthorized access to journal entries for user: " + username);
+        
+        // Compare case-insensitively to avoid auth issues
+        if (!currentUsername.equalsIgnoreCase(username)) {
+            throw new JournalEntryException("Unauthorized access to journal entries for user: " + username + 
+                ". Authenticated as: " + currentUsername);
         }
         return user;
     }
