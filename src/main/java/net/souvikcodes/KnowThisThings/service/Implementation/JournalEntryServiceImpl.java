@@ -157,9 +157,8 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
 
     private Users verifyUserIsAuthenticated(String username){
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        String currentPassword = SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
         Users user = verifyUserByUsername(username);
-        if (!currentUsername.equals(username) && !user.getPassword().equals(currentPassword)) {
+        if (!currentUsername.equals(username)) {
             throw new JournalEntryException("Unauthorized access to journal entries for user: " + username);
         }
         return user;

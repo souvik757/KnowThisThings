@@ -19,7 +19,6 @@ import net.souvikcodes.KnowThisThings.service.IUserService;
 public class UserServiceImpl implements IUserService {
 
     private final IUserRepository userRepository;
-    private final CustomUserDetailsServiceImpl customUserDetailsService;
     private static final PasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
 
     @Override
@@ -32,7 +31,6 @@ public class UserServiceImpl implements IUserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(List.of("USER"));
         userRepository.save(user);
-        customUserDetailsService.loadUserByUsername(user.getUsername());
     }
 
     @Override
