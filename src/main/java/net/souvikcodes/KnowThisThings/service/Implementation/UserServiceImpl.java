@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.bson.types.ObjectId;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import net.souvikcodes.KnowThisThings.entity.Users;
@@ -18,18 +19,33 @@ import net.souvikcodes.KnowThisThings.service.IUserService;
 public class UserServiceImpl implements IUserService {
 
     private final IUserRepository userRepository;
+    private final CustomUserDetailsServiceImpl customUserDetailsService;
     private static final PasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
 
     @Override
+    @Transactional
     public void saveUser(Users user) {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
+        user.setUsername(user.getUsername().trim());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(List.of("USER"));
         userRepository.save(user);
+        customUserDetailsService.loadUserByUsername(user.getUsername());
     }
 
+    @Override
+    public Users findByUserName(String userName) {
+        if (userName == null || userName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        Users user = userRepository.findByUsername(userName);
+        if (user == null) {
+            throw new ResourceNotFoundException("User not found with username: " + userName);
+        }
+        return user;
+    }
     @Override
     public List<Users> getAll() {
         List<Users> users = userRepository.findAll();
@@ -62,16 +78,6 @@ public class UserServiceImpl implements IUserService {
         userRepository.deleteById(id);
     }
 
-    @Override
-    public Users findByUserName(String userName) {
-        if (userName == null || userName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Username cannot be null or empty");
-        }
-        Users user = userRepository.findByUsername(userName);
-        if (user == null) {
-            throw new ResourceNotFoundException("User not found with username: " + userName);
-        }
-        return user;
-    }
+
 
 }

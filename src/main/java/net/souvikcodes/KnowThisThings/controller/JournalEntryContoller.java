@@ -43,6 +43,7 @@ public class JournalEntryContoller {
 
     @GetMapping("{username}")
     public ResponseEntity<List<JournalEntryDto>> getAllJournalEntriesForUser(@PathVariable String username) {
+        
         return ResponseEntity.ok(journalEntryService.getAllJournalEntriesForUser(username));
     }
 

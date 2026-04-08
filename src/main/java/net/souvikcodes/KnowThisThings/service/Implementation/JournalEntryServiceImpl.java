@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +31,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     @Override
     @Transactional
     public JournalEntryDto createJournalEntryForUser(JournalEntryDto journalEntryDto, String username) {
-        Users user = verifyUserByUsername(username);
+        Users user = verifyUserIsAuthenticated(username);
         JournalEntry journalEntry = modelMapper.map(journalEntryDto, JournalEntry.class);
         JournalEntry savedJournalEntry = journalEntryRepository.save(journalEntry);
         associateJournalWithUser(savedJournalEntry, user);
@@ -54,7 +55,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
 
     @Override
     public List<JournalEntryDto> getAllJournalEntriesForUser(String username) {
-        Users user = verifyUserByUsername(username);
+        Users user = verifyUserIsAuthenticated(username);
         List<JournalEntry> journalEntries = user.getJournalEntries();
         if (journalEntries == null || journalEntries.isEmpty()) {
             return List.of();
@@ -67,7 +68,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     @Override
     @Transactional
     public JournalEntryDto updateJournalEntryForUser(String username, String id, JournalEntryDto journalEntryDto) {
-        Users user = verifyUserByUsername(username);
+        Users user = verifyUserIsAuthenticated(username);
         JournalEntry existingJournalEntry = journalEntryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Journal entry not found with id: " + id));
 
@@ -85,7 +86,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     @Override
     @Transactional
     public void deleteJournalEntryForUser(String username, String id) {
-        Users user = verifyUserByUsername(username);
+        Users user = verifyUserIsAuthenticated(username);
         JournalEntry existingJournalEntry = journalEntryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Journal entry not found with id: " + id));
 
@@ -144,7 +145,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
      * Get all journals for a specific user
      */
     public List<JournalEntryDto> getJournalsByUsername(String username) {
-        Users user = verifyUserByUsername(username);
+        Users user = verifyUserIsAuthenticated(username);
         List<JournalEntry> journalEntries = user.getJournalEntries();
         if (journalEntries == null || journalEntries.isEmpty()) {
             throw new ResourceNotFoundException("No journals found for user: " + username);
@@ -154,5 +155,14 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
                 .toList();
     }
 
+    private Users verifyUserIsAuthenticated(String username){
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        String currentPassword = SecurityContextHolder.getContext().getAuthentication().getCredentials().toString();
+        Users user = verifyUserByUsername(username);
+        if (!currentUsername.equals(username) && !user.getPassword().equals(currentPassword)) {
+            throw new JournalEntryException("Unauthorized access to journal entries for user: " + username);
+        }
+        return user;
+    }
 
 }

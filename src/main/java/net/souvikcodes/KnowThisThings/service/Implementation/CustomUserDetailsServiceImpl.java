@@ -3,13 +3,13 @@ package net.souvikcodes.KnowThisThings.service.Implementation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import net.souvikcodes.KnowThisThings.entity.Users;
 import net.souvikcodes.KnowThisThings.repository.IUserRepository;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class CustomUserDetailsServiceImpl implements UserDetailsService {
 
