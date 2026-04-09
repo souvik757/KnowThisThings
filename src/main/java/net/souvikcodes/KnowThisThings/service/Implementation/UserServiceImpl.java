@@ -9,8 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import net.souvikcodes.KnowThisThings.entity.JournalEntry;
 import net.souvikcodes.KnowThisThings.entity.Users;
 import net.souvikcodes.KnowThisThings.exception.customexception.ResourceNotFoundException;
+import net.souvikcodes.KnowThisThings.repository.IJournalEntryRepository;
 import net.souvikcodes.KnowThisThings.repository.IUserRepository;
 import net.souvikcodes.KnowThisThings.service.IUserService;
 
@@ -19,6 +21,7 @@ import net.souvikcodes.KnowThisThings.service.IUserService;
 public class UserServiceImpl implements IUserService {
 
     private final IUserRepository userRepository;
+    private final IJournalEntryRepository journalEntryRepository;
     private static final PasswordEncoder passwordEncoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
 
     @Override
@@ -36,6 +39,7 @@ public class UserServiceImpl implements IUserService {
     /**
      * Save user without encoding password (for updates, when password is already encoded)
      */
+    @Override
     @Transactional
     public void updateUser(Users user) {
         if (user == null) {
@@ -79,6 +83,7 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
+    @Transactional
     public void deleteById(ObjectId id) {
         if (id == null) {
             throw new IllegalArgumentException("User ID cannot be null");
@@ -86,7 +91,14 @@ public class UserServiceImpl implements IUserService {
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("User not found with id: " + id);
         }
+        // delete every journal entry of the user as well
+        List<JournalEntry> journalEntries = findById(id).get().getJournalEntries();
+        journalEntryRepository.deleteAll(journalEntries);
         userRepository.deleteById(id);
+
+        // if (journalEntries != null && !journalEntries.isEmpty()) {
+        //     journalEntries.forEach(entries -> journalEntryRepository.deleteById(entries.getId()));
+        // }
     }
 
 

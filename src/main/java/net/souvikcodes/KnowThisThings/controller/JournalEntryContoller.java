@@ -28,42 +28,84 @@ public class JournalEntryContoller {
     
     private final IJournalEntryService journalEntryService ;
 
-    @GetMapping("/random/{id}")
-    public ResponseEntity<JournalEntryDto> getJournalEntryById(@PathVariable String id) {
-        JournalEntryDto journalEntry = journalEntryService.getJournalEntryById(id);
-        return ResponseEntity.ok(journalEntry);
-    }
-    /*
-    Paginated entries will be added.
-    */
+    // GET MAPPINGS
+   // to get all journal entries of all users, Paginated entries will be added.
     @GetMapping
     public ResponseEntity<List<JournalEntryDto>> getAllJournalEntries() {
         return ResponseEntity.ok(journalEntryService.getAllJournalEntries());
     }
-
+    // to get all journal entries of a user
     @GetMapping("{username}")
     public ResponseEntity<List<JournalEntryDto>> getAllJournalEntriesForUser(@PathVariable String username) {
         
         return ResponseEntity.ok(journalEntryService.getAllJournalEntriesForUser(username));
     }
+    // it will be usefull to fetch a certain journal entry by id
+    @GetMapping("/random/{id}")
+    public ResponseEntity<JournalEntryDto> getJournalEntryById(@PathVariable String id) {
+        JournalEntryDto journalEntry = journalEntryService.getJournalEntryById(id);
+        return ResponseEntity.ok(journalEntry);
+    }
 
+
+    // POST MAPPINGS
     @PostMapping("{username}")
     public ResponseEntity<JournalEntryDto> createJournalEntryForUser(@PathVariable String username, @Valid @RequestBody JournalEntryDto journalEntryDto) {
         JournalEntryDto createdJournalEntry = journalEntryService.createJournalEntryForUser(journalEntryDto, username);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdJournalEntry);
     }
-
+    // PUT MAPPINGS
     @PutMapping("/{username}/{id}")
     public ResponseEntity<JournalEntryDto> updateJournalEntryForUser(@PathVariable String username, @PathVariable String id, @Valid @RequestBody JournalEntryDto journalEntryDto) {
         JournalEntryDto updatedJournalEntry = journalEntryService.updateJournalEntryForUser(username, id, journalEntryDto);
         return ResponseEntity.ok(updatedJournalEntry);
     }
-
+    // DELETE MAPPINGS
     @DeleteMapping("/{username}/{id}")
     public ResponseEntity<Void> deleteJournalEntryForUser(@PathVariable String username, @PathVariable String id) {
         journalEntryService.deleteJournalEntryForUser(username, id);
         return ResponseEntity.noContent().build();
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     // To see Journal with Id , for admin only
@@ -73,7 +115,7 @@ public class JournalEntryContoller {
         return ResponseEntity.ok(journalEntries);
     }
 
-    // I will change it later to give this a proper strucure.
+    // I will change it later to give this a proper endpoint and functionality, for now this is just to give an idea of how it can work. This will be used to delete any journal entry by admin.
 
     @GetMapping("/search")
     public ResponseEntity<List<JournalEntryDto>> searchJournals(@RequestParam String query) {
@@ -100,6 +142,10 @@ public class JournalEntryContoller {
             .collect(Collectors.toList());
         return ResponseEntity.ok(trending);
     }
+
+    /*
+    I will make a proper chat system later, for now this is just a simple implementation to give an idea of how it can work. It will be a simple rule based system that will respond to certain keywords in the message. I will add more functionality to it later.
+    */
 
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {

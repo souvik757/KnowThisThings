@@ -1,4 +1,4 @@
-package net.souvikcodes.KnowThisThings.controller;
+package net.souvikcodes.KnowThisThings.controller.ControllerUser;
 
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
@@ -29,6 +29,25 @@ public class UserController {
     private final IUserService userService;
     private final ModelMapper modelMapper;
 
+    // POST MAPPINGS
+    // to create a new user -- unauthenticated endpoint
+    @PostMapping
+    public ResponseEntity<UsersDto> createUser(@RequestBody UsersDto userDto) {
+        if (userDto == null || userDto.getUsername() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        Users user = convertToEntity(userDto);
+        userService.saveUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(user));
+    }
+
+
+
+
+
+
+    
+
     @GetMapping
     public ResponseEntity<List<UsersDto>> getAllUsers() {
         List<Users> users = userService.getAll();
@@ -50,16 +69,6 @@ public class UserController {
     public ResponseEntity<UsersDto> getUserByUsername(@PathVariable String username) {
         Users user = userService.findByUserName(username);
         return ResponseEntity.ok(convertToDto(user));
-    }
-
-    @PostMapping
-    public ResponseEntity<UsersDto> createUser(@RequestBody UsersDto userDto) {
-        if (userDto == null || userDto.getUsername() == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        Users user = convertToEntity(userDto);
-        userService.saveUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(user));
     }
 
     @PostMapping("/{id}")

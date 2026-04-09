@@ -7,5 +7,5 @@ import net.souvikcodes.KnowThisThings.entity.JournalEntry;
 
 @Repository
 public interface IJournalEntryRepository extends MongoRepository<JournalEntry, String> {
-    
+
 }

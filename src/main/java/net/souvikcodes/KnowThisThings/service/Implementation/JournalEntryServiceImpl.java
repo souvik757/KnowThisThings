@@ -3,7 +3,6 @@ package net.souvikcodes.KnowThisThings.service.Implementation;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -28,23 +27,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     private final ModelMapper modelMapper;
     private final IUserService userService;
 
-    @Override
-    @Transactional
-    public JournalEntryDto createJournalEntryForUser(JournalEntryDto journalEntryDto, String username) {
-        Users user = verifyUserIsAuthenticated(username);
-        JournalEntry journalEntry = modelMapper.map(journalEntryDto, JournalEntry.class);
-        JournalEntry savedJournalEntry = journalEntryRepository.save(journalEntry);
-        associateJournalWithUser(savedJournalEntry, user);
-        return modelMapper.map(savedJournalEntry, JournalEntryDto.class);
-    }
-
-    @Override
-    public JournalEntryDto getJournalEntryById(String id) {
-        JournalEntry journalEntry = journalEntryRepository.findById(id).orElse(null);
-
-        return modelMapper.map(journalEntry, JournalEntryDto.class);
-    }
-
+    // GET MAPPINGS IMPLEMENTATIONS
     @Override
     public List<JournalEntryDto> getAllJournalEntries() {
         List<JournalEntry> journalEntries = journalEntryRepository.findAll();
@@ -66,6 +49,26 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     }
 
     @Override
+    public JournalEntryDto getJournalEntryById(String id) {
+        JournalEntry journalEntry = journalEntryRepository.findById(id).orElse(null);
+
+        return modelMapper.map(journalEntry, JournalEntryDto.class);
+    }
+
+
+
+    // POST, PUT, DELETE MAPPINGS IMPLEMENTATIONS
+    @Override
+    @Transactional
+    public JournalEntryDto createJournalEntryForUser(JournalEntryDto journalEntryDto, String username) {
+        Users user = verifyUserIsAuthenticated(username);
+        JournalEntry journalEntry = modelMapper.map(journalEntryDto, JournalEntry.class);
+        JournalEntry savedJournalEntry = journalEntryRepository.save(journalEntry);
+        associateJournalWithUser(savedJournalEntry, user);
+        return modelMapper.map(savedJournalEntry, JournalEntryDto.class);
+    }
+
+    @Override
     @Transactional
     public JournalEntryDto updateJournalEntryForUser(String username, String id, JournalEntryDto journalEntryDto) {
         Users user = verifyUserIsAuthenticated(username);
@@ -82,7 +85,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
         JournalEntry updatedJournalEntry = journalEntryRepository.save(existingJournalEntry);
         return modelMapper.map(updatedJournalEntry, JournalEntryDto.class);
     }
-
+    
     @Override
     @Transactional
     public void deleteJournalEntryForUser(String username, String id) {
@@ -113,52 +116,11 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
                 .map(journals -> modelMapper.map(journals, JournalEntryAdminDto.class))
                 .toList();
     }
-
-    /**
-     * Verify if a user exists by username
-     */
-    public Users verifyUserByUsername(String username) {
-        return userService.findByUserName(username);
-    }
-
-    /**
-     * Verify if a user exists by ID
-     */
-    public Users verifyUserById(ObjectId userId) {
-        return userService.findById(userId).orElseThrow(
-            () -> new ResourceNotFoundException("User not found with id: " + userId)
-        );
-    }
-
-    /**
-     * Add journal entry to user's journal list
-     */
-    public void associateJournalWithUser(JournalEntry journalEntry, Users user) {
-        if (user.getJournalEntries() == null) {
-            user.setJournalEntries(new ArrayList<>());
-        }
-        user.getJournalEntries().add(journalEntry);
-        userService.updateUser(user);
-    }
-
-    /**
-     * Get all journals for a specific user
-     */
-    public List<JournalEntryDto> getJournalsByUsername(String username) {
-        Users user = verifyUserIsAuthenticated(username);
-        List<JournalEntry> journalEntries = user.getJournalEntries();
-        if (journalEntries == null || journalEntries.isEmpty()) {
-            throw new ResourceNotFoundException("No journals found for user: " + username);
-        }
-        return journalEntries.stream()
-                .map(entry -> modelMapper.map(entry, JournalEntryDto.class))
-                .toList();
-    }
-
+    // helper implementations
     private Users verifyUserIsAuthenticated(String username){
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        System.out.println("DEBUG - Authenticated user: '" + currentUsername + "'");
-        System.out.println("DEBUG - Requested user: '" + username + "'");
+        // System.out.println("DEBUG - Authenticated user: '" + currentUsername + "'");
+        // System.out.println("DEBUG - Requested user: '" + username + "'");
         
         Users user = verifyUserByUsername(username);
         
@@ -170,4 +132,15 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
         return user;
     }
 
+    private Users verifyUserByUsername(String username) {
+        return userService.findByUserName(username);
+    }
+
+    private void associateJournalWithUser(JournalEntry journalEntry, Users user) {
+        if (user.getJournalEntries() == null) {
+            user.setJournalEntries(new ArrayList<>());
+        }
+        user.getJournalEntries().add(journalEntry);
+        userService.updateUser(user);
+    }
 }
