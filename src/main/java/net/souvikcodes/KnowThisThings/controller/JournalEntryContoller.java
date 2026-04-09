@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,18 +31,18 @@ public class JournalEntryContoller {
 
     // GET MAPPINGS
    // to get all journal entries of all users, Paginated entries will be added.
-    @GetMapping
+    @GetMapping("all")
     public ResponseEntity<List<JournalEntryDto>> getAllJournalEntries() {
         return ResponseEntity.ok(journalEntryService.getAllJournalEntries());
     }
     // to get all journal entries of a user
-    @GetMapping("{username}")
-    public ResponseEntity<List<JournalEntryDto>> getAllJournalEntriesForUser(@PathVariable String username) {
-        
+    @GetMapping("user")
+    public ResponseEntity<List<JournalEntryDto>> getAllJournalEntriesForUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName() ;
         return ResponseEntity.ok(journalEntryService.getAllJournalEntriesForUser(username));
     }
     // it will be usefull to fetch a certain journal entry by id
-    @GetMapping("/random/{id}")
+    @GetMapping("/user/{id}")
     public ResponseEntity<JournalEntryDto> getJournalEntryById(@PathVariable String id) {
         JournalEntryDto journalEntry = journalEntryService.getJournalEntryById(id);
         return ResponseEntity.ok(journalEntry);
@@ -49,20 +50,23 @@ public class JournalEntryContoller {
 
 
     // POST MAPPINGS
-    @PostMapping("{username}")
-    public ResponseEntity<JournalEntryDto> createJournalEntryForUser(@PathVariable String username, @Valid @RequestBody JournalEntryDto journalEntryDto) {
+    @PostMapping("user")
+    public ResponseEntity<JournalEntryDto> createJournalEntryForUser(@Valid @RequestBody JournalEntryDto journalEntryDto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName() ;
         JournalEntryDto createdJournalEntry = journalEntryService.createJournalEntryForUser(journalEntryDto, username);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdJournalEntry);
     }
     // PUT MAPPINGS
-    @PutMapping("/{username}/{id}")
-    public ResponseEntity<JournalEntryDto> updateJournalEntryForUser(@PathVariable String username, @PathVariable String id, @Valid @RequestBody JournalEntryDto journalEntryDto) {
+    @PutMapping("/user/{id}")
+    public ResponseEntity<JournalEntryDto> updateJournalEntryForUser(@PathVariable String id, @Valid @RequestBody JournalEntryDto journalEntryDto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName() ;
         JournalEntryDto updatedJournalEntry = journalEntryService.updateJournalEntryForUser(username, id, journalEntryDto);
         return ResponseEntity.ok(updatedJournalEntry);
     }
     // DELETE MAPPINGS
-    @DeleteMapping("/{username}/{id}")
-    public ResponseEntity<Void> deleteJournalEntryForUser(@PathVariable String username, @PathVariable String id) {
+    @DeleteMapping("/user/{id}")
+    public ResponseEntity<Void> deleteJournalEntryForUser(@PathVariable String id) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName() ;
         journalEntryService.deleteJournalEntryForUser(username, id);
         return ResponseEntity.noContent().build();
     }
