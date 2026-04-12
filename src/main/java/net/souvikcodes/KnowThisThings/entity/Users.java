@@ -22,6 +22,7 @@ public class Users {
     private String username;
     @NotNull
     private String password; 
+    private Boolean adminFlag ;
     @DBRef
     private List<JournalEntry> journalEntries = new ArrayList<>();
     private List<String> roles = new ArrayList<>();

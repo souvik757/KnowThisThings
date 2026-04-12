@@ -13,5 +13,6 @@ import lombok.NoArgsConstructor;
 public class UsersDto {
     private String username;
     private String password;
+    private Boolean adminFlag ;
     private List<String> journalEntries = new ArrayList<>();
 }

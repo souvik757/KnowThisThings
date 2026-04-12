@@ -32,7 +32,8 @@ public class UserServiceImpl implements IUserService {
         }
         user.setUsername(user.getUsername().trim());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRoles(List.of("USER"));
+        user.setRoles( 
+            user.getAdminFlag() ? List.of("USER", "ADMIN") : List.of("USER") );
         userRepository.save(user);
     }
 
@@ -62,6 +63,7 @@ public class UserServiceImpl implements IUserService {
     }
     @Override
     public List<Users> getAll() {
+        
         List<Users> users = userRepository.findAll();
         if (users.isEmpty()) {
             throw new ResourceNotFoundException("No users found");
