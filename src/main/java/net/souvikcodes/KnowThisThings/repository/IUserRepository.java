@@ -9,5 +9,7 @@ import net.souvikcodes.KnowThisThings.entity.Users;
 @Repository
 public interface IUserRepository extends MongoRepository<Users, ObjectId> {
     Users findByUsername(String username);
+    void deleteById(ObjectId id);
+    void deleteByUsername(String username);
 
 }

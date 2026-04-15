@@ -26,7 +26,7 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     @Transactional
-    public void saveUser(Users user) {
+    public boolean saveUser(Users user) {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
@@ -35,19 +35,22 @@ public class UserServiceImpl implements IUserService {
         user.setRoles( 
             user.getAdminFlag() ? List.of("USER", "ADMIN") : List.of("USER") );
         userRepository.save(user);
+        return true;
     }
 
     // updating user without encoding password (for updates, when password is already encoded)
      
     @Override
     @Transactional
-    public void updateUser(Users user) {
+    public boolean updateUser(Users user) {
         if (user == null) {
             throw new IllegalArgumentException("User cannot be null");
         }
         user.setUsername(user.getUsername().trim());
         // password is already encoded
         userRepository.save(user);
+
+        return true;
     }
 
     @Override
@@ -85,7 +88,7 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     @Transactional
-    public void deleteById(ObjectId id) {
+    public boolean deleteById(ObjectId id) {
         if (id == null) {
             throw new IllegalArgumentException("User ID cannot be null");
         }
@@ -96,10 +99,7 @@ public class UserServiceImpl implements IUserService {
         List<JournalEntry> journalEntries = findById(id).get().getJournalEntries();
         journalEntryRepository.deleteAll(journalEntries);
         userRepository.deleteById(id);
-
-        // if (journalEntries != null && !journalEntries.isEmpty()) {
-        //     journalEntries.forEach(entries -> journalEntryRepository.deleteById(entries.getId()));
-        // }
+        return true;
     }
 
 

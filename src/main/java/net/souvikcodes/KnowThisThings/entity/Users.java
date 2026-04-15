@@ -10,10 +10,12 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Data;
 
 @Document(collection = "users")
 @Data
+@Builder
 public class Users {
     @Id
     private ObjectId id;
@@ -24,6 +26,8 @@ public class Users {
     private String password; 
     private Boolean adminFlag ;
     @DBRef
+    @Builder.Default
     private List<JournalEntry> journalEntries = new ArrayList<>();
+    @Builder.Default
     private List<String> roles = new ArrayList<>();
 }
