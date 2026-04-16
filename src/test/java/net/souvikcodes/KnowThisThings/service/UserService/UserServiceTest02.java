@@ -1,4 +1,4 @@
-package net.souvikcodes.KnowThisThings.service.UserService.TestClass;
+package net.souvikcodes.KnowThisThings.service.UserService;
 
 import static org.junit.jupiter.api.Assertions.*;
 

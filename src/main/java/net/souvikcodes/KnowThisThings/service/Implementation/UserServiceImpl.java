@@ -32,14 +32,15 @@ public class UserServiceImpl implements IUserService {
         }
         user.setUsername(user.getUsername().trim());
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRoles( 
-            user.getAdminFlag() ? List.of("USER", "ADMIN") : List.of("USER") );
+        user.setRoles(
+                user.getAdminFlag() ? List.of("USER", "ADMIN") : List.of("USER"));
         userRepository.save(user);
         return true;
     }
 
-    // updating user without encoding password (for updates, when password is already encoded)
-     
+    // updating user without encoding password (for updates, when password is
+    // already encoded)
+
     @Override
     @Transactional
     public boolean updateUser(Users user) {
@@ -64,9 +65,10 @@ public class UserServiceImpl implements IUserService {
         }
         return user;
     }
+
     @Override
     public List<Users> getAll() {
-        
+
         List<Users> users = userRepository.findAll();
         if (users.isEmpty()) {
             throw new ResourceNotFoundException("No users found");
@@ -101,7 +103,5 @@ public class UserServiceImpl implements IUserService {
         userRepository.deleteById(id);
         return true;
     }
-
-
 
 }

@@ -1,4 +1,4 @@
-package net.souvikcodes.KnowThisThings.service.UserService.TestClass;
+package net.souvikcodes.KnowThisThings.service.UserService;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.bson.types.ObjectId;
-import org.junit.jupiter.api.AfterAll;
+// import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+// import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,41 +39,41 @@ public class UserServiceTest01 {
     private List<ObjectId> createdUserIds;
     private List<String> createdJournalEntryIds;
 
-    private static Users testUser;
-    private static Users testAdminUser;
-    private static JournalEntry testJournalEntry;
+    // private static Users testUser;
+    // private static Users testAdminUser;
+    // private static JournalEntry testJournalEntry;
 
-    @BeforeAll
-    static void setupTestData() {
-        System.out.println("=== Setting up test data ===");
-        testUser = Users.builder()
-                .username("testuser")
-                .password("password123")
-                .adminFlag(false)
-                .build();
+    // @BeforeAll
+    // static void setupTestData() {
+    // System.out.println("=== Setting up test data ===");
+    // testUser = Users.builder()
+    // .username("testuser")
+    // .password("password123")
+    // .adminFlag(false)
+    // .build();
 
-        testAdminUser = Users.builder()
-                .username("adminuser")
-                .password("adminpass123")
-                .adminFlag(true)
-                .build();
+    // testAdminUser = Users.builder()
+    // .username("adminuser")
+    // .password("adminpass123")
+    // .adminFlag(true)
+    // .build();
 
-        testJournalEntry = JournalEntry.builder()
-                .id(String.valueOf(ObjectId.get()))
-                .title("Test Journal Entry")
-                .content("This is a test journal entry")
-                .tags(List.of("test", "sample"))
-                .viewCount(0)
-                .build();
-    }
+    // testJournalEntry = JournalEntry.builder()
+    // .id(String.valueOf(ObjectId.get()))
+    // .title("Test Journal Entry")
+    // .content("This is a test journal entry")
+    // .tags(List.of("test", "sample"))
+    // .viewCount(0)
+    // .build();
+    // }
 
-    @AfterAll
-    static void cleanupTestData() {
-        System.out.println("=== Cleaning up test data ===");
-        testUser = null;
-        testAdminUser = null;
-        testJournalEntry = null;
-    }
+    // @AfterAll
+    // static void cleanupTestData() {
+    // System.out.println("=== Cleaning up test data ===");
+    // testUser = null;
+    // testAdminUser = null;
+    // testJournalEntry = null;
+    // }
 
     @BeforeEach
     @Transactional
