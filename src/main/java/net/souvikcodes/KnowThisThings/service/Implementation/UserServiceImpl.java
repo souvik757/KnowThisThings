@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.souvikcodes.KnowThisThings.entity.JournalEntry;
 import net.souvikcodes.KnowThisThings.entity.Users;
 import net.souvikcodes.KnowThisThings.exception.customexception.ResourceNotFoundException;
@@ -16,6 +17,7 @@ import net.souvikcodes.KnowThisThings.repository.IJournalEntryRepository;
 import net.souvikcodes.KnowThisThings.repository.IUserRepository;
 import net.souvikcodes.KnowThisThings.service.IUserService;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements IUserService {
@@ -28,13 +30,21 @@ public class UserServiceImpl implements IUserService {
     @Transactional
     public boolean saveUser(Users user) {
         if (user == null) {
+            log.error("Attempted to save null user!");
             throw new IllegalArgumentException("User cannot be null");
         }
-        user.setUsername(user.getUsername().trim());
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRoles(
-                user.getAdminFlag() ? List.of("USER", "ADMIN") : List.of("USER"));
-        userRepository.save(user);
+        log.info("Saving user: {}", user.getUsername());
+        try {
+            user.setUsername(user.getUsername().trim());
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            user.setRoles(
+                    user.getAdminFlag() ? List.of("USER", "ADMIN") : List.of("USER"));
+            userRepository.save(user);
+        } catch (Exception e) {
+            log.error("Error saving user: {}", e.getMessage());
+            throw new RuntimeException("Failed to save user", e);
+        }
+
         return true;
     }
 
@@ -45,6 +55,7 @@ public class UserServiceImpl implements IUserService {
     @Transactional
     public boolean updateUser(Users user) {
         if (user == null) {
+            log.error("Attempted to save null user!");
             throw new IllegalArgumentException("User cannot be null");
         }
         user.setUsername(user.getUsername().trim());
@@ -95,6 +106,7 @@ public class UserServiceImpl implements IUserService {
             throw new IllegalArgumentException("User ID cannot be null");
         }
         if (!userRepository.existsById(id)) {
+            log.error("User not found with id {}", id);
             throw new ResourceNotFoundException("User not found with id: " + id);
         }
         // delete every journal entry of the user as well

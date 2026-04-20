@@ -1,18 +1,14 @@
 package net.souvikcodes.KnowThisThings.controller.ControllerUser;
 
-
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
-import org.springframework.boot.security.autoconfigure.SecurityProperties.User;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,14 +33,14 @@ public class UserControllerRestricted {
     public ResponseEntity<List<UsersDto>> getAllUsers() {
         List<Users> users = userService.getAll();
         List<UsersDto> userDtos = users.stream()
-            .map(user -> modelMapper.map(user, UsersDto.class))
-            .collect(Collectors.toList());
+                .map(user -> modelMapper.map(user, UsersDto.class))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(userDtos);
     }
 
     // PUT MAPPINGS
     @PostMapping("/user/updateuser")
-    public ResponseEntity<?> updateUser(@RequestBody UsersDto usersDto){
+    public ResponseEntity<?> updateUser(@RequestBody UsersDto usersDto) {
         String curentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         Users existingUser = userService.findByUserName(curentUsername);
         if (existingUser != null) {
@@ -65,10 +61,9 @@ public class UserControllerRestricted {
         return ResponseEntity.status(HttpStatusCode.valueOf(200)).body("user updated successfully!");
     }
 
-
     // DELETE MAPPINGS
     @DeleteMapping("/user/deleteuser")
-    public ResponseEntity<?> deleteUser(){
+    public ResponseEntity<?> deleteUser() {
         String curentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         Users existingUser = userService.findByUserName(curentUsername);
         if (existingUser != null) {
