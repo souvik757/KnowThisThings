@@ -44,7 +44,7 @@ public class UserServiceImpl implements IUserService {
             log.error("Error saving user: {}", e.getMessage());
             throw new RuntimeException("Failed to save user", e);
         }
-
+        log.info("User saved successfully: {}", user.getUsername());
         return true;
     }
 
