@@ -1,5 +1,6 @@
 package net.souvikcodes.KnowThisThings.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,32 +12,35 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import lombok.RequiredArgsConstructor;
 import net.souvikcodes.KnowThisThings.service.Implementation.CustomUserDetailsServiceImpl;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SpringSecurity {
 
-    private final CustomUserDetailsServiceImpl customUserDetailsService;
+    @Autowired
+    private CustomUserDetailsServiceImpl customUserDetailsService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http.authorizeHttpRequests(req -> 
-            req.requestMatchers("/", "/index.html", "/login.html", "/signup.html", "/css/**", "/js/**", "/api/public/**").permitAll()
-            .requestMatchers("/api/journal-entries/**", "/api/restricted/user/**").authenticated()
-            .requestMatchers("/api/restricted/admin/**").hasRole("ADMIN")
-            .anyRequest().permitAll())
-            .httpBasic(Customizer.withDefaults())
-            .formLogin(Customizer.withDefaults())
-            .csrf(AbstractHttpConfigurer::disable)
-            .build();
+        return http
+                .authorizeHttpRequests(req -> req
+                        .requestMatchers("/", "/index.html", "/login.html", "/signup.html", "/css/**", "/js/**",
+                                "/api/public/**")
+                        .permitAll()
+                        .requestMatchers("/api/journal-entries/**", "/api/restricted/user/**").authenticated()
+                        .requestMatchers("/api/restricted/admin/**").hasRole("ADMIN")
+                        .anyRequest().permitAll())
+                .httpBasic(Customizer.withDefaults())
+                .formLogin(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .build();
     }
 
     @Bean
     public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+        AuthenticationManagerBuilder authenticationManagerBuilder = http
+                .getSharedObject(AuthenticationManagerBuilder.class);
         authenticationManagerBuilder.userDetailsService(customUserDetailsService)
                 .passwordEncoder(passwordEncoder());
         return authenticationManagerBuilder.build();
