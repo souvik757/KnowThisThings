@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,13 +48,17 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
     }
 
     @Override
-    public JournalEntryDto getJournalEntryById(String id) {
+    public JournalEntryDto getJournalEntryById(String id, String username) {
+        Users user = verifyUserIsAuthenticated(username);
         JournalEntry journalEntry = journalEntryRepository.findById(id).orElse(null);
-
+        if (journalEntry == null) {
+            throw new ResourceNotFoundException("Journal entry not found with id: " + id);
+        }
+        if (!user.getJournalEntries().stream().anyMatch(entry -> entry.getId().equals(id))) {
+            throw new JournalEntryException("Journal entry does not belong to user: " + username);
+        }
         return modelMapper.map(journalEntry, JournalEntryDto.class);
     }
-
-
 
     // POST, PUT, DELETE MAPPINGS IMPLEMENTATIONS
     @Override
@@ -85,7 +88,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
         JournalEntry updatedJournalEntry = journalEntryRepository.save(existingJournalEntry);
         return modelMapper.map(updatedJournalEntry, JournalEntryDto.class);
     }
-    
+
     @Override
     @Transactional
     public void deleteJournalEntryForUser(String username, String id) {
@@ -100,7 +103,7 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
         // Remove from user's journal list
         user.getJournalEntries().remove(existingJournalEntry);
         userService.updateUser(user);
-        
+
         // Delete from repository
         journalEntryRepository.deleteById(id);
     }
@@ -116,23 +119,19 @@ public class JournalEntryServiceImpl implements IJournalEntryService {
                 .map(journals -> modelMapper.map(journals, JournalEntryAdminDto.class))
                 .toList();
     }
+
     // helper implementations
-    private Users verifyUserIsAuthenticated(String username){
-        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
-        // System.out.println("DEBUG - Authenticated user: '" + currentUsername + "'");
-        // System.out.println("DEBUG - Requested user: '" + username + "'");
-        
-        Users user = verifyUserByUsername(username);
-        
+    private Users verifyUserIsAuthenticated(String username) {
+        Users user = getUserByUsername(username);
+
         // Compare case-insensitively to avoid auth issues
-        if (!currentUsername.equalsIgnoreCase(username)) {
-            throw new JournalEntryException("Unauthorized access to journal entries for user: " + username + 
-                ". Authenticated as: " + currentUsername);
+        if (user == null || !(user.getUsername()).equalsIgnoreCase(username)) {
+            throw new JournalEntryException("Unauthorized access to journal entries for user: " + username);
         }
         return user;
     }
 
-    private Users verifyUserByUsername(String username) {
+    private Users getUserByUsername(String username) {
         return userService.findByUserName(username);
     }
 

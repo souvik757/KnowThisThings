@@ -26,91 +26,57 @@ import net.souvikcodes.KnowThisThings.service.IJournalEntryService;
 @RequiredArgsConstructor
 @RequestMapping("/api/journal-entries")
 public class JournalEntryContoller {
-    
-    private final IJournalEntryService journalEntryService ;
+
+    private final IJournalEntryService journalEntryService;
 
     // GET MAPPINGS
-   // to get all journal entries of all users, Paginated entries will be added.
+    // to get all journal entries of all users, Paginated entries will be added.
     @GetMapping("all")
     public ResponseEntity<List<JournalEntryDto>> getAllJournalEntries() {
         return ResponseEntity.ok(journalEntryService.getAllJournalEntries());
     }
+
     // to get all journal entries of a user
     @GetMapping("user")
     public ResponseEntity<List<JournalEntryDto>> getAllJournalEntriesForUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName() ;
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(journalEntryService.getAllJournalEntriesForUser(username));
     }
+
     // it will be usefull to fetch a certain journal entry by id
     @GetMapping("/user/{id}")
     public ResponseEntity<JournalEntryDto> getJournalEntryById(@PathVariable String id) {
-        JournalEntryDto journalEntry = journalEntryService.getJournalEntryById(id);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        JournalEntryDto journalEntry = journalEntryService.getJournalEntryById(id, username);
         return ResponseEntity.ok(journalEntry);
     }
 
-
     // POST MAPPINGS
     @PostMapping("user")
-    public ResponseEntity<JournalEntryDto> createJournalEntryForUser(@Valid @RequestBody JournalEntryDto journalEntryDto) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName() ;
+    public ResponseEntity<JournalEntryDto> createJournalEntryForUser(
+            @Valid @RequestBody JournalEntryDto journalEntryDto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         JournalEntryDto createdJournalEntry = journalEntryService.createJournalEntryForUser(journalEntryDto, username);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdJournalEntry);
     }
+
     // PUT MAPPINGS
     @PutMapping("/user/{id}")
-    public ResponseEntity<JournalEntryDto> updateJournalEntryForUser(@PathVariable String id, @Valid @RequestBody JournalEntryDto journalEntryDto) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName() ;
-        JournalEntryDto updatedJournalEntry = journalEntryService.updateJournalEntryForUser(username, id, journalEntryDto);
+    public ResponseEntity<JournalEntryDto> updateJournalEntryForUser(@PathVariable String id,
+            @Valid @RequestBody JournalEntryDto journalEntryDto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        JournalEntryDto updatedJournalEntry = journalEntryService.updateJournalEntryForUser(username, id,
+                journalEntryDto);
         return ResponseEntity.ok(updatedJournalEntry);
     }
+
     // DELETE MAPPINGS
     @DeleteMapping("/user/{id}")
     public ResponseEntity<Void> deleteJournalEntryForUser(@PathVariable String id) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName() ;
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         journalEntryService.deleteJournalEntryForUser(username, id);
         return ResponseEntity.noContent().build();
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     // To see Journal with Id , for admin only
     @GetMapping("/admin")
@@ -119,17 +85,19 @@ public class JournalEntryContoller {
         return ResponseEntity.ok(journalEntries);
     }
 
-    // I will change it later to give this a proper endpoint and functionality, for now this is just to give an idea of how it can work. This will be used to delete any journal entry by admin.
+    // I will change it later to give this a proper endpoint and functionality, for
+    // now this is just to give an idea of how it can work. This will be used to
+    // delete any journal entry by admin.
 
     @GetMapping("/search")
     public ResponseEntity<List<JournalEntryDto>> searchJournals(@RequestParam String query) {
         List<JournalEntryDto> allJournals = journalEntryService.getAllJournalEntries();
         List<JournalEntryDto> filtered = allJournals.stream()
-            .filter(j -> j.getTitle().toLowerCase().contains(query.toLowerCase()) ||
+                .filter(j -> j.getTitle().toLowerCase().contains(query.toLowerCase()) ||
                         j.getContent().toLowerCase().contains(query.toLowerCase()) ||
                         (j.getTags() != null && j.getTags().stream()
-                            .anyMatch(t -> t.toLowerCase().contains(query.toLowerCase()))))
-            .collect(Collectors.toList());
+                                .anyMatch(t -> t.toLowerCase().contains(query.toLowerCase()))))
+                .collect(Collectors.toList());
         return ResponseEntity.ok(filtered);
     }
 
@@ -137,19 +105,22 @@ public class JournalEntryContoller {
     public ResponseEntity<List<JournalEntryDto>> getTrendingJournals() {
         List<JournalEntryDto> allJournals = journalEntryService.getAllJournalEntries();
         List<JournalEntryDto> trending = allJournals.stream()
-            .sorted((a, b) -> {
-                Integer viewA = a.getViewCount() != null ? a.getViewCount() : 0;
-                Integer viewB = b.getViewCount() != null ? b.getViewCount() : 0;
-                return Integer.compare(viewB, viewA);
-            })
-            .limit(10)
-            .collect(Collectors.toList());
+                .sorted((a, b) -> {
+                    Integer viewA = a.getViewCount() != null ? a.getViewCount() : 0;
+                    Integer viewB = b.getViewCount() != null ? b.getViewCount() : 0;
+                    return Integer.compare(viewB, viewA);
+                })
+                .limit(10)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(trending);
     }
 
     /*
-    I will make a proper chat system later, for now this is just a simple implementation to give an idea of how it can work. It will be a simple rule based system that will respond to certain keywords in the message. I will add more functionality to it later.
-    */
+     * I will make a proper chat system later, for now this is just a simple
+     * implementation to give an idea of how it can work. It will be a simple rule
+     * based system that will respond to certain keywords in the message. I will add
+     * more functionality to it later.
+     */
 
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(@RequestBody ChatRequest request) {
@@ -180,23 +151,50 @@ public class JournalEntryContoller {
     public static class ChatRequest {
         private String message;
         private String conversationId;
-        public ChatRequest() {}
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-        public String getConversationId() { return conversationId; }
-        public void setConversationId(String conversationId) { this.conversationId = conversationId; }
+
+        public ChatRequest() {
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public String getConversationId() {
+            return conversationId;
+        }
+
+        public void setConversationId(String conversationId) {
+            this.conversationId = conversationId;
+        }
     }
 
     public static class ChatResponse {
         private String response;
         private String conversationId;
+
         public ChatResponse(String response, String conversationId) {
             this.response = response;
             this.conversationId = conversationId;
         }
-        public String getResponse() { return response; }
-        public void setResponse(String response) { this.response = response; }
-        public String getConversationId() { return conversationId; }
-        public void setConversationId(String conversationId) { this.conversationId = conversationId; }
+
+        public String getResponse() {
+            return response;
+        }
+
+        public void setResponse(String response) {
+            this.response = response;
+        }
+
+        public String getConversationId() {
+            return conversationId;
+        }
+
+        public void setConversationId(String conversationId) {
+            this.conversationId = conversationId;
+        }
     }
 }

@@ -1,9 +1,12 @@
 package net.souvikcodes.KnowThisThings.controller.ControllerExternalApi;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.AllArgsConstructor;
@@ -30,5 +33,19 @@ public class ExternalApiController {
         String jokeOfTheDay = externalApiService.getDadJokeOfTheDay();
         return (jokeOfTheDay.isBlank() || jokeOfTheDay.isEmpty()) ? ResponseEntity.noContent().build()
                 : ResponseEntity.ok(jokeOfTheDay);
+    }
+
+    @GetMapping("/text-to-speech")
+    public ResponseEntity<byte[]> textToSpeech(@RequestParam String id) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        byte[] audioBytes = externalApiService.convertTextToSpeech(id, username);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("audio/mpeg"))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"output.mp3\"")
+                .contentLength(audioBytes.length)
+                .body(audioBytes);
+
     }
 }
