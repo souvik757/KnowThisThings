@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import net.souvikcodes.KnowThisThings.Util.CustomValidation.Valid;
 import net.souvikcodes.KnowThisThings.dto.UsersDto;
 import net.souvikcodes.KnowThisThings.entity.Users;
 import net.souvikcodes.KnowThisThings.exception.customexception.ResourceNotFoundException;
@@ -27,6 +28,7 @@ public class UserControllerRestricted {
 
     private final IUserService userService;
     private final ModelMapper modelMapper;
+    private final Valid valid;
 
     // GET MAPPINGS
     @GetMapping("/admin/allusers")
@@ -52,6 +54,16 @@ public class UserControllerRestricted {
             }
             if (usersDto.getAdminFlag() != null) {
                 existingUser.setAdminFlag(usersDto.getAdminFlag());
+            }
+            if (usersDto.getEmail() != null) {
+                if (!valid.isValidEmail(usersDto.getEmail())) {
+                    return ResponseEntity.status(HttpStatusCode.valueOf(400)).body("Invalid email format!");
+                }
+                existingUser.setEmail(usersDto.getEmail());
+            }
+
+            if (usersDto.getOptedSentimentAnalysis() != null) {
+                existingUser.setOptedSentimentAnalysis(usersDto.getOptedSentimentAnalysis());
             }
             userService.saveUser(existingUser);
         } else {

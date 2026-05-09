@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,9 @@ public class Users {
     @NotNull
     private String password;
     private Boolean adminFlag;
+    @Email
+    private String email;
+    private Boolean optedSentimentAnalysis;
     @DBRef
     @Builder.Default
     private List<JournalEntry> journalEntries = new ArrayList<>();
