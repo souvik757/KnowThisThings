@@ -11,10 +11,11 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ElevenLabsRequest {
+public class SentimentDto {
+    @JsonProperty("score")
+    private Double score;
     @JsonProperty("text")
-    private String text;
-
-    @JsonProperty("model_id")
-    private String modelId;
+    private String content;
+    @JsonProperty("sentiment")
+    private String sentiment;
 }

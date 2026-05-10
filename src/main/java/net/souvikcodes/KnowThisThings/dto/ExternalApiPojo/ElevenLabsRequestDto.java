@@ -11,7 +11,10 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class DadJoke {
-    @JsonProperty("joke")
-    private String joke;
+public class ElevenLabsRequestDto {
+    @JsonProperty("text")
+    private String text;
+
+    @JsonProperty("model_id")
+    private String modelId;
 }

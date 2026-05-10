@@ -17,15 +17,18 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.souvikcodes.KnowThisThings.dto.JournalEntryDto;
-import net.souvikcodes.KnowThisThings.dto.ExternalApiPojo.DadJoke;
-import net.souvikcodes.KnowThisThings.dto.ExternalApiPojo.ElevenLabsRequest;
+import net.souvikcodes.KnowThisThings.dto.ExternalApiPojo.DadJokeDto;
+import net.souvikcodes.KnowThisThings.dto.ExternalApiPojo.ElevenLabsRequestDto;
+import net.souvikcodes.KnowThisThings.dto.ExternalApiPojo.SentimentDto;
 import net.souvikcodes.KnowThisThings.service.IExternalApiService;
 import net.souvikcodes.KnowThisThings.service.IJournalEntryService;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ExternalApiServiceImpl implements IExternalApiService {
 
     @Value("${api.ninja.key}")
@@ -36,6 +39,12 @@ public class ExternalApiServiceImpl implements IExternalApiService {
 
     @Value("${api.ninja.dadjokes.url}")
     private String apiNinjaDadJokesUrl;
+
+    @Value("${api.ninja.sentimentAnalysis.url}")
+    private String apiNinjaSentimentAnalysisUrl;
+
+    @Value("${api.ninja.sentientAnalysis.textParamKey}")
+    private String apiNinjaSentimentAnalysisTextParamKey;
 
     @Value("${api.ElevenLabs.key}")
     private String elevenLabsKey;
@@ -58,13 +67,8 @@ public class ExternalApiServiceImpl implements IExternalApiService {
     @Value("${api.ElevenLabs.textToSpeech.url}")
     private String elevenLabsTextToSpeechUrl;
 
-    private RestTemplate restTemplate;
-    private IJournalEntryService journalEntryService;
-
-    public ExternalApiServiceImpl(RestTemplate restTemplate, IJournalEntryService journalEntryService) {
-        this.restTemplate = restTemplate;
-        this.journalEntryService = journalEntryService;
-    }
+    private final RestTemplate restTemplate;
+    private final IJournalEntryService journalEntryService;
 
     @Override
     public String getDadJokeOfTheDay() {
@@ -75,8 +79,8 @@ public class ExternalApiServiceImpl implements IExternalApiService {
 
         HttpEntity<String> entity = new HttpEntity<>(headers);
         try {
-            ResponseEntity<List<DadJoke>> response = restTemplate.exchange(
-                    apiNinjaDadJokesUrl, HttpMethod.GET, entity, new ParameterizedTypeReference<List<DadJoke>>() {
+            ResponseEntity<List<DadJokeDto>> response = restTemplate.exchange(
+                    apiNinjaDadJokesUrl, HttpMethod.GET, entity, new ParameterizedTypeReference<List<DadJokeDto>>() {
                     });
 
             return (response != null && !response.getBody().isEmpty()) ? response.getBody().get(0).getJoke() : null;
@@ -101,9 +105,9 @@ public class ExternalApiServiceImpl implements IExternalApiService {
         headers.set(elevenLabsKeyHeader, elevenLabsKey);
         headers.setAccept(Collections.singletonList(
                 MediaType.APPLICATION_OCTET_STREAM));
-        ElevenLabsRequest requestPayload = new ElevenLabsRequest(text, elevenLabsModelId);
+        ElevenLabsRequestDto requestPayload = new ElevenLabsRequestDto(text, elevenLabsModelId);
 
-        HttpEntity<ElevenLabsRequest> entity = new HttpEntity<>(requestPayload, headers);
+        HttpEntity<ElevenLabsRequestDto> entity = new HttpEntity<>(requestPayload, headers);
 
         String url = elevenLabsTextToSpeechUrl + "/" + elevenLabsVoiceId;
         Map<String, String> params = new HashMap<>();
@@ -114,6 +118,28 @@ public class ExternalApiServiceImpl implements IExternalApiService {
                     url, HttpMethod.POST, entity, byte[].class, params);
 
             return response.getBody();
+        } catch (HttpClientErrorException e) {
+            String errorMessage = "API error : " + e.getStatusCode();
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        } catch (RestClientException e) {
+            String errorMessage = "Request failed : " + e.getMessage();
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
+        }
+    }
+
+    @Override
+    public String analyzeSentiment(String content) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set(apiNinjaKeyHeader, apiNinjaKey);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        try {
+            ResponseEntity<SentimentDto> response = restTemplate.exchange(
+                    apiNinjaSentimentAnalysisUrl + "?" + apiNinjaSentimentAnalysisTextParamKey + "=" + content,
+                    HttpMethod.GET, entity, SentimentDto.class);
+            return response.getBody() != null ? response.getBody().getSentiment() : null;
         } catch (HttpClientErrorException e) {
             String errorMessage = "API error : " + e.getStatusCode();
             log.error(errorMessage);
